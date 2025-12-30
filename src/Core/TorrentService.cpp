@@ -51,23 +51,42 @@ void TorrentService::startService()
 
     lt::settings_pack pack;
 
-    pack.set_int(lt::settings_pack::aio_threads, 4);
+    pack.set_int(lt::settings_pack::aio_threads, 16);
+    pack.set_int(lt::settings_pack::checking_mem_usage, 1024);
 
     pack.set_int(lt::settings_pack::alert_mask,
         lt::alert::status_notification |
         lt::alert::storage_notification |
-        lt::alert::error_notification
+        lt::alert::error_notification |
+        lt::alert::performance_warning
     );
 
     pack.set_str(lt::settings_pack::user_agent, m_settings->userAgent().toStdString());
 
-    pack.set_int(lt::settings_pack::active_downloads, m_settings->maxConcurrentDownloads());
-    pack.set_int(lt::settings_pack::active_seeds, 100);
-    pack.set_int(lt::settings_pack::active_limit, 200);
+    pack.set_int(lt::settings_pack::active_downloads, m_settings->maxConcurrentDownloads() > 0 ? m_settings->maxConcurrentDownloads() : 4);
+    pack.set_int(lt::settings_pack::active_seeds, 200);
+    pack.set_int(lt::settings_pack::active_limit, 500);
 
-    pack.set_int(lt::settings_pack::connections_limit, m_settings->maxConnectionPerServer() * 10);
+    pack.set_int(lt::settings_pack::connections_limit, std::max(200, m_settings->maxConnectionPerServer() * 10));
+    pack.set_int(lt::settings_pack::torrent_connect_boost, 20);
+    pack.set_int(lt::settings_pack::max_out_request_queue, 3000);
+    pack.set_int(lt::settings_pack::max_allowed_in_request_queue, 2000);
 
-    pack.set_int(lt::settings_pack::send_buffer_watermark, 3 * 1024 * 1024);
+    pack.set_int(lt::settings_pack::send_buffer_watermark, 10 * 1024 * 1024);
+    pack.set_int(lt::settings_pack::send_buffer_low_watermark, 5 * 1024 * 1024);
+    pack.set_int(lt::settings_pack::send_buffer_watermark_factor, 150);
+
+    pack.set_int(lt::settings_pack::use_parole_mode, 0);
+    pack.set_int(lt::settings_pack::announce_to_all_tiers, 1);
+    pack.set_int(lt::settings_pack::announce_to_all_trackers, 1);
+
+    pack.set_bool(lt::settings_pack::enable_lsd, true);
+    pack.set_bool(lt::settings_pack::enable_upnp, true);
+    pack.set_bool(lt::settings_pack::enable_natpmp, true);
+    pack.set_bool(lt::settings_pack::enable_dht, m_settings->enableDht());
+    pack.set_int(lt::settings_pack::max_peerlist_size, 20000);
+    pack.set_int(lt::settings_pack::dht_upload_rate_limit, 50000);
+    pack.set_str(lt::settings_pack::dht_bootstrap_nodes, "router.bittorrent.com:6881,router.utorrent.com:6881,dht.transmissionbt.com:6881,router.bitcomet.com:6881,67.215.246.10:6881");
 
     pack.set_bool(lt::settings_pack::enable_dht, m_settings->enableDht());
     pack.set_str(lt::settings_pack::dht_bootstrap_nodes, "router.bittorrent.com:6881,router.utorrent.com:6881,dht.transmissionbt.com:6881");
