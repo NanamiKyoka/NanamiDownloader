@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <rect width="256" height="256" x="-1" y="-1" fill="none"/>
+    <rect width="64" height="64" fill="#0B1020" rx="8"/>
+    <g fill="none" stroke="#FFE4FF" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"> <!-- 描边宽度从8缩到2 -->
+        <line x1="10.75" x2="10.75" y1="6.75" y2="16.25"/>
+        <polyline points="6 11.5 10.75 16.25 15.5 11.5"/>
+    </g>
+    <g fill="none" stroke="#FFE4FF" stroke-linecap="round" stroke-width="3">
+        <circle cx="20" cy="22.25" r="3"/>
+        <circle cx="44" cy="22.25" r="3"/>
+        <circle cx="32" cy="34.25" r="3"/>
+        <circle cx="20" cy="46.25" r="3"/>
+        <circle cx="44" cy="46.25" r="3"/>
+        <line x1="20" x2="20" y1="25.25" y2="43.25"/>
+        <line x1="23" x2="29" y1="25.25" y2="31.25"/>
+        <line x1="44" x2="44" y1="25.25" y2="43.25"/>
+        <line x1="35" x2="41" y1="37.25" y2="43.25"/>
+    </g>
+</svg>

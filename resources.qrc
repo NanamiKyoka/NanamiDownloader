@@ -1,0 +1,49 @@
+<RCC>
+    <qresource prefix="/">
+        <file>src/UI/Main.qml</file>
+        <file>src/UI/NewTaskDialog.qml</file>
+        <file>src/UI/Sidebar.qml</file>
+        <file>src/UI/AboutDialog.qml</file>
+
+        <file>src/UI/TaskListView.qml</file>
+        <file>src/UI/SpeedWidget.qml</file>
+
+        <file>src/UI/SettingsView.qml</file>
+        <file>src/UI/BasicSettingsView.qml</file>
+        <file>src/UI/AdvancedSettingsView.qml</file>
+        <file>src/UI/CloudMountSettingsView.qml</file>
+
+        <file>src/UI/CloseConfirmDialog.qml</file>
+        <file>src/UI/DeleteConfirmDialog.qml</file>
+        <file>src/UI/AddTorrentDialog.qml</file>
+        <file>src/UI/OverwriteConfirmDialog.qml</file>
+        <file>src/UI/TaskDetailView.qml</file>
+
+        <file>src/UI/Drivers/BaiduView.qml</file>
+        <file>src/UI/Drivers/ThunderView.qml</file>
+        <file>src/UI/Drivers/ThunderVerificationDialog.qml</file>
+
+        <file>src/Icons/home.svg</file>
+        <file>src/Icons/all.svg</file>
+        <file>src/Icons/add.svg</file>
+        <file>src/Icons/settings.svg</file>
+        <file>src/Icons/info.svg</file>
+        <file>src/Icons/play.svg</file>
+        <file>src/Icons/pause.svg</file>
+        <file>src/Icons/stop.svg</file>
+        <file>src/Icons/delete.svg</file>
+        <file>src/Icons/folder.svg</file>
+        <file>src/Icons/link.svg</file>
+        <file>src/Icons/refresh.svg</file>
+        <file>src/Icons/connection.svg</file>
+        <file>src/Icons/sun.svg</file>
+        <file>src/Icons/moon.svg</file>
+        <file>src/Icons/icon.svg</file>
+        <file>src/Icons/bug.svg</file>
+        <file>src/Icons/speed.svg</file>
+        <file>src/Icons/icon.ico</file>
+
+        <file>src/Icons/Drivers/baidu.svg</file>
+        <file>src/Icons/Drivers/thunder.svg</file>
+    </qresource>
+</RCC>

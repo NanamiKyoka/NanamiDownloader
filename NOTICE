@@ -1,0 +1,50 @@
+NanamiDownloader Third Party Notices
+
+This software includes the following third-party components:
+
+Qt Framework
+License: LGPL v3
+Website: https://www.qt.io
+Used components: QtCore, QtGui, QtWidgets, QtQuick, QtQml, QtNetwork
+Purpose: GUI and Application Framework
+License text: https://doc.qt.io/qt-6/lgpl.html
+
+Boost Libraries
+License: Boost Software License
+Website: https://www.boost.org
+Used components: boost::asio, boost::system, boost::property-tree
+Purpose: C++ Standard Library Extensions
+License text: https://www.boost.org/LICENSE_1_0.txt
+
+Libtorrent (Rasterbar)
+License: BSD License
+Website: https://www.libtorrent.org
+Purpose: BitTorrent protocol implementation
+License text: https://github.com/arvidn/libtorrent/blob/RC_2_0/LICENSE
+
+Aria2
+License: GNU General Public License v2
+Website: https://github.com/aria2/aria2
+Purpose: Multi-protocol command-line download utility (HTTP/HTTPS, FTP, SFTP)
+Usage: Invoked as an external process.
+License text: https://github.com/aria2/aria2/blob/master/COPYING
+
+FFmpeg
+License: GNU Lesser General Public License v2.1+ / GNU General Public License v2+
+Website: https://ffmpeg.org
+Purpose: Multimedia processing (audio/video conversion and streaming)
+Usage: Invoked as an external process.
+License text: https://ffmpeg.org/legal.html
+
+N_m3u8DL-RE
+License: MIT License
+Website: https://github.com/nilaoda/N_m3u8DL-RE
+Purpose: M3U8/HLS stream downloader
+Usage: Invoked as an external process.
+License text: https://github.com/nilaoda/N_m3u8DL-RE/blob/master/LICENSE
+
+OpenSSL
+License: Apache License 2.0
+Website: https://www.openssl.org
+Purpose: Cryptography and SSL/TLS toolkit
+License text: https://www.apache.org/licenses/LICENSE-2.0.txt
