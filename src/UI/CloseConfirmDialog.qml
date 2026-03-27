@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Nanami.UI 1.0
+import Nanami.UI.Components 1.0
 
 Popup {
     id: root
@@ -32,29 +34,8 @@ Popup {
     signal minimizeToTray(bool rememberChoice)
     signal exitApp(bool rememberChoice)
 
-    component CustomCheckBox: CheckBox {
-        id: ccb
-        indicator: Rectangle {
-            implicitWidth: 20
-            implicitHeight: 20
-            x: ccb.leftPadding
-            y: parent.height / 2 - height / 2
-            radius: 4
-            color: ccb.checked ? Theme.accent : "transparent"
-            border.color: ccb.checked ? Theme.accent : (Theme.isDark ? "#666" : "#bbb")
-            border.width: 1.5
-            Text {
-                anchors.centerIn: parent; text: "✓"; font.pixelSize: 14; font.bold: true; color: "white"; visible: ccb.checked
-            }
-            Behavior on color { ColorAnimation { duration: 100 } }
-        }
-        contentItem: Text {
-            text: ccb.text; font: ccb.font; color: Theme.textPrimary; verticalAlignment: Text.AlignVCenter; leftPadding: ccb.indicator.width + ccb.spacing
-        }
-    }
-
     background: Rectangle {
-        color: Theme.isDark ? "#2b2b2b" : "#ffffff"
+        color: Theme.surface
         radius: 8
         border.color: Theme.divider
         border.width: 1
@@ -98,7 +79,7 @@ Popup {
 
         Item { Layout.fillHeight: true }
 
-        CustomCheckBox {
+        NCheckbox {
             id: rememberCb
             text: qsTr("记住我的选择")
         }
@@ -108,57 +89,21 @@ Popup {
             Layout.alignment: Qt.AlignRight
             spacing: 12
 
-            Button {
+            NButton {
                 text: qsTr("取消")
-                flat: true
-                Layout.preferredWidth: 80
-                Layout.preferredHeight: 36
-                background: Rectangle {
-                    color: parent.hovered ? (Theme.isDark ? "#3e3e3e" : "#eeeeee") : "transparent"
-                    border.color: Theme.divider
-                    radius: 4
-                }
-                contentItem: Text {
-                    text: parent.text
-                    color: Theme.textPrimary
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
+                variant: "default"
                 onClicked: root.close()
             }
 
-            Button {
+            NButton {
                 text: qsTr("最小化到托盘")
-                Layout.preferredHeight: 36
-                background: Rectangle {
-                    color: parent.hovered ? (Theme.isDark ? "#3e3e3e" : "#eeeeee") : "transparent"
-                    border.color: Theme.divider
-                    radius: 4
-                }
-                contentItem: Text {
-                    text: parent.text
-                    color: Theme.textPrimary
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
+                variant: "default"
                 onClicked: root.minimizeToTray(rememberCb.checked)
             }
 
-            Button {
+            NButton {
                 text: qsTr("退出")
-                Layout.preferredWidth: 80
-                Layout.preferredHeight: 36
-                background: Rectangle {
-                    color: parent.down ? "#d9363e" : "#ff4d4f"
-                    radius: 4
-                }
-                contentItem: Text {
-                    text: parent.text
-                    color: "white"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    font.bold: true
-                }
+                variant: "primary"
                 onClicked: root.exitApp(rememberCb.checked)
             }
         }

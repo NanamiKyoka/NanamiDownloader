@@ -31,6 +31,12 @@ void SettingsManager::setResumeTasks(bool resume) { m_settings.setValue("resumeT
 bool SettingsManager::confirmExit() const { return m_settings.value("confirmExit", true).toBool(); }
 void SettingsManager::setConfirmExit(bool confirm) { m_settings.setValue("confirmExit", confirm); emit confirmExitChanged(); }
 
+bool SettingsManager::confirmDelete() const { return m_settings.value("confirmDelete", true).toBool(); }
+void SettingsManager::setConfirmDelete(bool confirm) { m_settings.setValue("confirmDelete", confirm); emit confirmDeleteChanged(); }
+
+bool SettingsManager::deleteWithFile() const { return m_settings.value("deleteWithFile", false).toBool(); }
+void SettingsManager::setDeleteWithFile(bool deleteFile) { m_settings.setValue("deleteWithFile", deleteFile); emit deleteWithFileChanged(); }
+
 bool SettingsManager::rememberWindowPosition() const { return m_settings.value("rememberWindowPosition", true).toBool(); }
 void SettingsManager::setRememberWindowPosition(bool remember) { m_settings.setValue("rememberWindowPosition", remember); emit rememberWindowPositionChanged(); }
 

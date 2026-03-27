@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Nanami.UI 1.0
+import Nanami.UI.Components 1.0
 
 Popup {
     id: root
@@ -81,40 +83,18 @@ Popup {
             Layout.alignment: Qt.AlignRight
             spacing: 12
 
-            Button {
+            NButton {
                 text: qsTr("继续下载")
-                flat: true
-                Layout.preferredHeight: 36
-                background: Rectangle {
-                    color: parent.hovered ? (Theme.isDark ? "#3e3e3e" : "#eeeeee") : "transparent"
-                    border.color: Theme.divider
-                    radius: 4
-                }
-                contentItem: Text {
-                    text: parent.text
-                    color: Theme.textPrimary
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
+                variant: "default"
                 onClicked: {
                     root.reject(root.gid)
                     root.close()
                 }
             }
 
-            Button {
+            NButton {
                 text: qsTr("重新配置")
-                Layout.preferredHeight: 36
-                background: Rectangle {
-                    color: parent.down ? Qt.darker(Theme.accent, 1.1) : Theme.accent
-                    radius: 4
-                }
-                contentItem: Text {
-                    text: parent.text
-                    color: "white"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
+                variant: "primary"
                 onClicked: {
                     root.confirm(root.gid)
                     root.close()

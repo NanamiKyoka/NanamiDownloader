@@ -1,0 +1,20 @@
+module Nanami.UI.Components
+singleton AnimationController 1.0 AnimationController.qml
+ThemeConfig 1.0 ThemeConfig.qml
+NButton 1.0 NButton.qml
+NInput 1.0 NInput.qml
+NSwitch 1.0 NSwitch.qml
+NCheckbox 1.0 NCheckbox.qml
+NCard 1.0 NCard.qml
+NProgress 1.0 NProgress.qml
+NDivider 1.0 NDivider.qml
+NTooltip 1.0 NTooltip.qml
+NBadge 1.0 NBadge.qml
+NSpin 1.0 NSpin.qml
+NIconButton 1.0 NIconButton.qml
+NComboBox 1.0 NComboBox.qml
+NSpinBox 1.0 NSpinBox.qml
+NTextArea 1.0 NTextArea.qml
+NPopupAnimation 1.0 NPopupAnimation.qml
+NListItemAnimation 1.0 NListItemAnimation.qml
+NPageTransition 1.0 NPageTransition.qml

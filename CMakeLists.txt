@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.16)
 
 project(NanamiDownloader)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_POLICY_DEFAULT_CMP0167 NEW)
+
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_AUTOMOC ON)
@@ -59,6 +61,33 @@ qt_add_executable(NanamiDownloader
         NanamiDownloader.rc
 )
 
+# 添加 NanamiUI 组件模块
+qt_add_qml_module(NanamiDownloader
+    URI Nanami.UI.Components
+    VERSION 1.2
+    RESOURCE_PREFIX "/"
+    QML_FILES
+        src/UI/Components/AnimationController.qml
+        src/UI/Components/ThemeConfig.qml
+        src/UI/Components/NButton.qml
+        src/UI/Components/NInput.qml
+        src/UI/Components/NSwitch.qml
+        src/UI/Components/NCheckbox.qml
+        src/UI/Components/NCard.qml
+        src/UI/Components/NProgress.qml
+        src/UI/Components/NDivider.qml
+        src/UI/Components/NTooltip.qml
+        src/UI/Components/NBadge.qml
+        src/UI/Components/NSpin.qml
+        src/UI/Components/NIconButton.qml
+        src/UI/Components/NComboBox.qml
+        src/UI/Components/NSpinBox.qml
+        src/UI/Components/NTextArea.qml
+        src/UI/Components/NPopupAnimation.qml
+        src/UI/Components/NListItemAnimation.qml
+        src/UI/Components/NPageTransition.qml
+)
+
 target_link_libraries(NanamiDownloader PRIVATE
         Qt6::Core
         Qt6::Widgets
@@ -88,35 +117,17 @@ if (TARGET Qt6::lupdate AND TARGET Qt6::lrelease)
             TS_FILES ${TRANSLATION_FILES}
             RESOURCE_PREFIX "/translations"
     )
-
-    set(TS_UPDATE_SOURCES
-            src/UI/Main.qml
-            src/UI/NewTaskDialog.qml
-            src/UI/SettingsView.qml
-            src/UI/BasicSettingsView.qml
-            src/UI/AdvancedSettingsView.qml
-            src/UI/Sidebar.qml
-            src/UI/TaskListView.qml
-            src/UI/CloseConfirmDialog.qml
-            src/UI/DeleteConfirmDialog.qml
-            src/UI/AddTorrentDialog.qml
-            src/UI/OverwriteConfirmDialog.qml
-            src/UI/TaskDetailView.qml
-            src/UI/CloudMountSettingsView.qml
-            src/UI/AboutDialog.qml
-
-            src/UI/Drivers/BaiduView.qml
-            src/UI/Drivers/ThunderView.qml
-    )
-
-    add_custom_target(update_translations
-            COMMAND Qt6::lupdate ${TS_UPDATE_SOURCES} -ts ${TRANSLATION_FILES}
-            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    )
 endif ()
 
+# 根据构建类型设置不同的输出目录
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(OUTPUT_DIR ${CMAKE_BINARY_DIR}/Debug)
+else()
+    set(OUTPUT_DIR ${CMAKE_BINARY_DIR}/Release)
+endif()
+
 set_target_properties(NanamiDownloader PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR}
 )
 
 install(TARGETS NanamiDownloader RUNTIME DESTINATION bin)
@@ -124,8 +135,8 @@ install(TARGETS NanamiDownloader RUNTIME DESTINATION bin)
 if (WIN32)
 
     add_custom_command(TARGET NanamiDownloader POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/bin
-            COMMAND ${CMAKE_COMMAND} -D SOURCE_DIR=${CMAKE_SOURCE_DIR}/third_party/bin -D TARGET_DIR=${CMAKE_BINARY_DIR}/bin -P ${CMAKE_SOURCE_DIR}/cmake/copy_third_party.cmake
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
+            COMMAND ${CMAKE_COMMAND} -D SOURCE_DIR=${CMAKE_SOURCE_DIR}/third_party/bin -D TARGET_DIR=${OUTPUT_DIR} -P ${CMAKE_SOURCE_DIR}/cmake/copy_third_party.cmake
     )
 
     if (CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -139,13 +150,14 @@ if (WIN32)
 
         if (WINDEPLOYQT_EXECUTABLE)
             add_custom_command(TARGET NanamiDownloader POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/bin
-                    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:NanamiDownloader> ${CMAKE_BINARY_DIR}/bin/
+                    COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
+                    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:NanamiDownloader> ${OUTPUT_DIR}/
                     COMMAND ${WINDEPLOYQT_EXECUTABLE}
                     --qmldir ${CMAKE_SOURCE_DIR}/src/UI
+                    --qmldir ${CMAKE_SOURCE_DIR}/src/UI/Components
                     --no-translations
                     --compiler-runtime
-                    ${CMAKE_BINARY_DIR}/bin/NanamiDownloader.exe
+                    ${OUTPUT_DIR}/NanamiDownloader.exe
             )
         endif ()
     endif ()

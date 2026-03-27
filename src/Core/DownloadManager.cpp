@@ -10,22 +10,8 @@
 #include <QUuid>
 #include <QApplication>
 
-DownloadManager::DownloadManager(SettingsManager* settings, QObject *parent)
-    : QObject(parent)
-    , m_aria2(new Aria2Service(settings, this))
-    , m_m3u8(new M3u8Service(settings, this))
-    , m_torrent(new TorrentService(settings, this))
-    , m_baidu(new BaiduService(settings, this))
-    , m_thunder(new ThunderService(settings, this))
-    , m_allModel(new TaskModel(this))
-    , m_activeModel(new TaskModel(this))
-    , m_waitingModel(new TaskModel(this))
-    , m_stoppedModel(new TaskModel(this))
-    , m_seedingModel(new TaskModel(this))
-    , m_baiduModel(new BaiduFileModel(this))
-    , m_thunderModel(new ThunderFileModel(this))
-    , m_settings(settings)
-    , m_netManager(new QNetworkAccessManager(this))
+DownloadManager::DownloadManager(SettingsManager *settings, QObject *parent)
+    : QObject(parent), m_aria2(new Aria2Service(settings, this)), m_m3u8(new M3u8Service(settings, this)), m_torrent(new TorrentService(settings, this)), m_baidu(new BaiduService(settings, this)), m_thunder(new ThunderService(settings, this)), m_allModel(new TaskModel(this)), m_activeModel(new TaskModel(this)), m_waitingModel(new TaskModel(this)), m_stoppedModel(new TaskModel(this)), m_seedingModel(new TaskModel(this)), m_baiduModel(new BaiduFileModel(this)), m_thunderModel(new ThunderFileModel(this)), m_settings(settings), m_netManager(new QNetworkAccessManager(this))
 {
     connect(m_aria2, &Aria2Service::tasksUpdated, this, &DownloadManager::refreshTasks);
     connect(m_m3u8, &M3u8Service::tasksUpdated, this, &DownloadManager::refreshTasks);
@@ -34,37 +20,34 @@ DownloadManager::DownloadManager(SettingsManager* settings, QObject *parent)
     connect(m_torrent, &TorrentService::metadataLoaded, this, &DownloadManager::torrentMetadataLoaded);
     connect(m_torrent, &TorrentService::taskExists, this, &DownloadManager::taskExists);
 
-    connect(m_m3u8, &M3u8Service::errorOccurred, this, [this](QString msg){
-        emit errorOccurred("M3U8 Error: " + msg);
-    });
+    connect(m_m3u8, &M3u8Service::errorOccurred, this, [this](QString msg)
+            { emit errorOccurred("M3U8 Error: " + msg); });
 
-    connect(m_baidu, &BaiduService::fileListUpdated, this, [this](const std::vector<BaiduFile> &files){
+    connect(m_baidu, &BaiduService::fileListUpdated, this, [this](const std::vector<BaiduFile> &files)
+            {
         m_baiduModel->updateData(files);
-        emit baiduFilesLoaded();
-    });
-    connect(m_baidu, &BaiduService::linkResolved, this, [this](QString url, QJsonObject options, QString savePath, QString filename){
+        emit baiduFilesLoaded(); });
+    connect(m_baidu, &BaiduService::linkResolved, this, [this](QString url, QJsonObject options, QString savePath, QString filename)
+            {
         QJsonObject finalOptions = options;
         if (!finalOptions.contains("out") && !filename.isEmpty()) {
             finalOptions["out"] = filename;
         }
         addUri(url, finalOptions);
-        qInfo() << "Baidu download started:" << filename;
-    });
-    connect(m_baidu, &BaiduService::errorOccurred, this, [this](QString msg){
-        emit errorOccurred("Baidu Error: " + msg);
-    });
+        qInfo() << "Baidu download started:" << filename; });
+    connect(m_baidu, &BaiduService::errorOccurred, this, [this](QString msg)
+            { emit errorOccurred("Baidu Error: " + msg); });
 
-    connect(m_thunder, &ThunderService::fileListUpdated, this, [this](const std::vector<ThunderFile> &files){
+    connect(m_thunder, &ThunderService::fileListUpdated, this, [this](const std::vector<ThunderFile> &files)
+            {
         m_thunderModel->updateData(files);
-        emit thunderFilesLoaded();
-    });
-    connect(m_thunder, &ThunderService::linkResolved, this, [this](QString url, QJsonObject options, QString savePath, QString filename){
+        emit thunderFilesLoaded(); });
+    connect(m_thunder, &ThunderService::linkResolved, this, [this](QString url, QJsonObject options, QString savePath, QString filename)
+            {
         addUri(url, options);
-        qInfo() << "Thunder download started:" << filename;
-    });
-    connect(m_thunder, &ThunderService::errorOccurred, this, [this](QString msg){
-        emit errorOccurred("Thunder Error: " + msg);
-    });
+        qInfo() << "Thunder download started:" << filename; });
+    connect(m_thunder, &ThunderService::errorOccurred, this, [this](QString msg)
+            { emit errorOccurred("Thunder Error: " + msg); });
     connect(m_thunder, &ThunderService::authRequired, this, &DownloadManager::authRequired);
     connect(m_thunder, &ThunderService::verificationRequired, this, &DownloadManager::thunderVerificationRequired);
 
@@ -83,35 +66,45 @@ void DownloadManager::startServices()
 
 void DownloadManager::shutdown()
 {
-    if (m_aria2) m_aria2->shutdownService();
-    if (m_torrent) m_torrent->shutdownService();
+    if (m_aria2)
+        m_aria2->shutdownService();
+    if (m_torrent)
+        m_torrent->shutdownService();
 }
 
 void DownloadManager::addUri(const QString &uri, const QJsonObject &options)
 {
     QString cleanUri = uri.trimmed();
 
-    if (cleanUri.startsWith("magnet:?")) {
+    if (cleanUri.startsWith("magnet:?"))
+    {
         QString gid = m_torrent->fetchMagnetMetadata(cleanUri);
-        if (!gid.isEmpty()) {
+        if (!gid.isEmpty())
+        {
             emit magnetLinkAdded(gid);
         }
-    } else if (cleanUri.endsWith(".torrent", Qt::CaseInsensitive)) {
+    }
+    else if (cleanUri.endsWith(".torrent", Qt::CaseInsensitive))
+    {
         QNetworkRequest req((QUrl(cleanUri)));
 
-        if (options.contains("header")) {
+        if (options.contains("header"))
+        {
             QJsonArray headers = options["header"].toArray();
-            for (const auto& h : headers) {
+            for (const auto &h : headers)
+            {
                 QString headerStr = h.toString();
                 int idx = headerStr.indexOf(":");
-                if (idx != -1) {
+                if (idx != -1)
+                {
                     req.setRawHeader(headerStr.left(idx).trimmed().toUtf8(), headerStr.mid(idx + 1).trimmed().toUtf8());
                 }
             }
         }
 
         QNetworkReply *reply = m_netManager->get(req);
-        connect(reply, &QNetworkReply::finished, this, [this, reply, options](){
+        connect(reply, &QNetworkReply::finished, this, [this, reply, options]()
+                {
             reply->deleteLater();
             if (reply->error() == QNetworkReply::NoError) {
                 QByteArray data = reply->readAll();
@@ -128,9 +121,10 @@ void DownloadManager::addUri(const QString &uri, const QJsonObject &options)
                 }
             } else {
                 qWarning() << "Failed to download .torrent file:" << reply->errorString();
-            }
-        });
-    } else {
+            } });
+    }
+    else
+    {
         m_aria2->addUri(cleanUri, options);
     }
 }
@@ -168,23 +162,30 @@ void DownloadManager::continueTorrent(const QString &gid)
 
 void DownloadManager::setFilePriority(const QString &gid, int fileIndex, bool enabled)
 {
-    if (gid.startsWith("bt_")) {
+    if (gid.startsWith("bt_"))
+    {
         m_torrent->setFilePriority(gid, fileIndex, enabled);
     }
 }
 
 void DownloadManager::pause(const QString &gid)
 {
-    if (gid.startsWith("m3u8_")) m_m3u8->stopTask(gid);
-    else if (gid.startsWith("bt_")) m_torrent->pause(gid);
-    else m_aria2->pause(gid);
+    if (gid.startsWith("m3u8_"))
+        m_m3u8->stopTask(gid);
+    else if (gid.startsWith("bt_"))
+        m_torrent->pause(gid);
+    else
+        m_aria2->pause(gid);
 }
 
 void DownloadManager::unpause(const QString &gid)
 {
-    if (gid.startsWith("m3u8_")) m_m3u8->resumeTask(gid);
-    else if (gid.startsWith("bt_")) m_torrent->resume(gid);
-    else m_aria2->unpause(gid);
+    if (gid.startsWith("m3u8_"))
+        m_m3u8->resumeTask(gid);
+    else if (gid.startsWith("bt_"))
+        m_torrent->resume(gid);
+    else
+        m_aria2->unpause(gid);
 }
 
 void DownloadManager::remove(const QString &gid)
@@ -195,41 +196,62 @@ void DownloadManager::remove(const QString &gid)
 void DownloadManager::handleDelete(const QString &gid, bool deleteFile)
 {
     qInfo() << "Deleting task:" << gid << "Delete files:" << deleteFile;
-    if (gid.startsWith("m3u8_")) {
+    if (gid.startsWith("m3u8_"))
+    {
         bool isActive = false;
         auto activeTasks = m_m3u8->getActiveTasks();
-        for(const auto& t : activeTasks) if(t.gid == gid) isActive = true;
+        for (const auto &t : activeTasks)
+            if (t.gid == gid)
+                isActive = true;
 
-        if (isActive) {
+        if (isActive)
+        {
             m_m3u8->cancelTask(gid);
-        } else {
+        }
+        else
+        {
             m_m3u8->deleteTask(gid, deleteFile);
         }
-    } else if (gid.startsWith("bt_")) {
+    }
+    else if (gid.startsWith("bt_"))
+    {
         m_torrent->remove(gid, deleteFile);
-    } else {
+    }
+    else
+    {
         bool isActive = false;
         auto activeTasks = m_aria2->getActiveTasks();
-        for(const auto& t : activeTasks) if(t.gid == gid) isActive = true;
+        for (const auto &t : activeTasks)
+            if (t.gid == gid)
+                isActive = true;
 
-        if(!isActive) {
+        if (!isActive)
+        {
             auto waitingTasks = m_aria2->getWaitingTasks();
-            for(const auto& t : waitingTasks) if(t.gid == gid) isActive = true;
+            for (const auto &t : waitingTasks)
+                if (t.gid == gid)
+                    isActive = true;
         }
 
-        if (isActive) {
+        if (isActive)
+        {
             m_aria2->remove(gid);
-        } else {
+        }
+        else
+        {
             QString path;
             auto stoppedTasks = m_aria2->getStoppedTasks();
-            for(const auto& t : stoppedTasks) {
-                if(t.gid == gid) {
+            for (const auto &t : stoppedTasks)
+            {
+                if (t.gid == gid)
+                {
                     path = t.path;
                     break;
                 }
             }
 
-            if (deleteFile && !path.isEmpty()) {
+            if (deleteFile && !path.isEmpty())
+            {
                 QFile::remove(path);
                 QFile::remove(path + ".aria2");
             }
@@ -257,9 +279,26 @@ void DownloadManager::purgeDownloadResult()
     m_aria2->purgeDownloadResult();
 }
 
+int DownloadManager::removeCompletedTasks()
+{
+    int count = 0;
+    std::vector<Task> stopped = m_aria2->getStoppedTasks();
+    for (const auto &task : stopped)
+    {
+        if (task.status == "complete" || task.status == "error" || task.status == "removed")
+        {
+            m_aria2->removeDownloadResult(task.gid);
+            count++;
+        }
+    }
+    refreshTasks();
+    return count;
+}
+
 void DownloadManager::openFolder(const QString &path)
 {
-    if (path.isEmpty()) return;
+    if (path.isEmpty())
+        return;
     QFileInfo fi(path);
     QString folderPath = fi.isDir() ? fi.absoluteFilePath() : fi.absolutePath();
     QDesktopServices::openUrl(QUrl::fromLocalFile(folderPath));
@@ -267,45 +306,74 @@ void DownloadManager::openFolder(const QString &path)
 
 void DownloadManager::openFile(const QString &path)
 {
-    if (path.isEmpty()) return;
+    if (path.isEmpty())
+        return;
     QDesktopServices::openUrl(QUrl::fromLocalFile(path));
 }
 
 void DownloadManager::restartTask(const QString &gid)
 {
-    if (gid.startsWith("m3u8_")) {
+    if (gid.startsWith("m3u8_"))
+    {
         m_m3u8->restartTask(gid);
-    } else if (gid.startsWith("bt_")) {
+    }
+    else if (gid.startsWith("bt_"))
+    {
         m_torrent->resume(gid);
-    } else {
+    }
+    else
+    {
         std::vector<Task> stopped = m_aria2->getStoppedTasks();
         QString url;
         bool found = false;
-        for (const auto &t : stopped) {
-            if (t.gid == gid) {
+        for (const auto &t : stopped)
+        {
+            if (t.gid == gid)
+            {
                 url = t.url;
                 found = true;
                 break;
             }
         }
-        if (!found) {
-             std::vector<Task> active = m_aria2->getActiveTasks();
-             for (const auto &t : active) { if(t.gid == gid) { url = t.url; found = true; break; } }
+        if (!found)
+        {
+            std::vector<Task> active = m_aria2->getActiveTasks();
+            for (const auto &t : active)
+            {
+                if (t.gid == gid)
+                {
+                    url = t.url;
+                    found = true;
+                    break;
+                }
+            }
         }
-        if (!found) {
-             std::vector<Task> waiting = m_aria2->getWaitingTasks();
-             for (const auto &t : waiting) { if(t.gid == gid) { url = t.url; found = true; break; } }
+        if (!found)
+        {
+            std::vector<Task> waiting = m_aria2->getWaitingTasks();
+            for (const auto &t : waiting)
+            {
+                if (t.gid == gid)
+                {
+                    url = t.url;
+                    found = true;
+                    break;
+                }
+            }
         }
 
-        if (found && !url.isEmpty()) {
+        if (found && !url.isEmpty())
+        {
             handleDelete(gid, false);
             addUri(url);
         }
     }
 }
 
-QJsonObject DownloadManager::getTaskDetails(const QString &gid) {
-    if (gid.startsWith("bt_")) {
+QJsonObject DownloadManager::getTaskDetails(const QString &gid)
+{
+    if (gid.startsWith("bt_"))
+    {
         return m_torrent->getTorrentDetails(gid);
     }
     return QJsonObject();
@@ -328,12 +396,14 @@ void DownloadManager::refreshTasks()
     m_activeModel->updateTasks(active);
 
     qint64 totalSpeed = 0;
-    for(const auto& t : active) {
+    for (const auto &t : active)
+    {
         totalSpeed += t.downloadSpeed;
     }
 
     QString speedStr = formatSpeed(totalSpeed);
-    if (speedStr != m_totalDownloadSpeedString) {
+    if (speedStr != m_totalDownloadSpeedString)
+    {
         m_totalDownloadSpeedString = speedStr;
         emit totalDownloadSpeedChanged();
     }
@@ -365,35 +435,45 @@ void DownloadManager::refreshTasks()
     all.insert(all.end(), seeding.begin(), seeding.end());
     m_allModel->updateTasks(all);
 
-    for (const auto& task : stopped) {
-        if (task.status == "error") {
-            if (!m_handledErrorGids.contains(task.gid)) {
+    for (const auto &task : stopped)
+    {
+        if (task.status == "error")
+        {
+            if (!m_handledErrorGids.contains(task.gid))
+            {
                 m_handledErrorGids.insert(task.gid);
 
-                if (m_settings->onDownloadFailure() == 1) {
+                if (m_settings->onDownloadFailure() == 1)
+                {
                     QString key = task.url.isEmpty() ? task.gid : task.url;
                     int currentRetries = m_retryState.value(key, 0);
 
-                    if (currentRetries < m_settings->maxTries()) {
+                    if (currentRetries < m_settings->maxTries())
+                    {
                         m_retryState[key] = currentRetries + 1;
 
                         int waitTime = m_settings->retryWait() * 1000;
-                        if (waitTime < 1000) waitTime = 1000;
+                        if (waitTime < 1000)
+                            waitTime = 1000;
 
-                        qInfo() << QString("Task failed. Retrying in %1s (%2/%3)...").arg(waitTime/1000).arg(m_retryState[key]).arg(m_settings->maxTries());
+                        qInfo() << QString("Task failed. Retrying in %1s (%2/%3)...").arg(waitTime / 1000).arg(m_retryState[key]).arg(m_settings->maxTries());
 
-                        QTimer::singleShot(waitTime, this, [this, gidStr=task.gid](){
-                            restartTask(gidStr);
-                        });
-                    } else {
+                        QTimer::singleShot(waitTime, this, [this, gidStr = task.gid]()
+                                           { restartTask(gidStr); });
+                    }
+                    else
+                    {
                         qWarning() << "Task failed. Max retries reached.";
                         m_retryState.remove(key);
                     }
                 }
             }
-        } else if (task.status == "complete") {
+        }
+        else if (task.status == "complete")
+        {
             QString key = task.url.isEmpty() ? task.gid : task.url;
-            if (m_retryState.contains(key)) {
+            if (m_retryState.contains(key))
+            {
                 m_retryState.remove(key);
             }
         }
@@ -402,48 +482,65 @@ void DownloadManager::refreshTasks()
     QSet<QString> currentActiveGids;
     QMap<QString, QString> currentStatusMap;
 
-    auto addToMap = [&](const std::vector<Task>& vec) {
-        for (const auto& t : vec) currentStatusMap[t.gid] = t.status;
+    auto addToMap = [&](const std::vector<Task> &vec)
+    {
+        for (const auto &t : vec)
+            currentStatusMap[t.gid] = t.status;
     };
     addToMap(active);
     addToMap(waiting);
     addToMap(stopped);
     addToMap(seeding);
 
-    for (const auto& t : active) {
+    for (const auto &t : active)
+    {
         currentActiveGids.insert(t.gid);
     }
 
-    if (currentActiveGids.isEmpty() && !m_previousActiveGids.isEmpty()) {
+    if (currentActiveGids.isEmpty() && !m_previousActiveGids.isEmpty())
+    {
         bool naturalFinish = true;
-        for (const QString& gid : m_previousActiveGids) {
-            if (!currentStatusMap.contains(gid)) {
+        for (const QString &gid : m_previousActiveGids)
+        {
+            if (!currentStatusMap.contains(gid))
+            {
                 naturalFinish = false;
                 break;
             }
             QString s = currentStatusMap[gid];
-            if (s == "paused" || s == "waiting" || s == "removed" || s == "error") {
+            if (s == "paused" || s == "waiting" || s == "removed" || s == "error")
+            {
                 naturalFinish = false;
                 break;
             }
         }
 
-        if (naturalFinish) {
+        if (naturalFinish)
+        {
             checkDownloadCompleteAction();
         }
     }
     m_previousActiveGids = currentActiveGids;
 }
 
-QString DownloadManager::formatSpeed(qint64 bytes) {
-    if (bytes <= 0) return "0 B/s";
-    if (bytes >= 1024 * 1024 * 1024) {
+QString DownloadManager::formatSpeed(qint64 bytes)
+{
+    if (bytes <= 0)
+        return "0 B/s";
+    if (bytes >= 1024 * 1024 * 1024)
+    {
         return QString::number(static_cast<double>(bytes) / (1024 * 1024 * 1024), 'f', 2) + " GB/s";
-    } else if (bytes >= 1024 * 1024) {
+    }
+    else if (bytes >= 1024 * 1024)
+    {
         return QString::number(static_cast<double>(bytes) / (1024 * 1024), 'f', 1) + " MB/s";
-    } else if (bytes >= 1024) {
+    }
+    else if (bytes >= 1024)
+    {
         return QString::number(static_cast<double>(bytes) / 1024, 'f', 0) + " KB/s";
-    } else {
+    }
+    else
+    {
         return QString::number(bytes) + " B/s";
     }
 }
@@ -452,9 +549,12 @@ void DownloadManager::checkDownloadCompleteAction()
 {
     int action = m_settings->onDownloadComplete();
 
-    if (action == 1) {
+    if (action == 1)
+    {
         performPlaySound();
-    } else if (action == 2) {
+    }
+    else if (action == 2)
+    {
         m_settings->setOnDownloadComplete(0);
         performShutdown();
     }
@@ -504,20 +604,24 @@ void DownloadManager::fetchTrackers()
     urls["XIU2-nohttp-cdn"] = "https://jsd.onmicrosoft.cn/gh/XIU2/TrackersListCollection/nohttp.txt";
 
     QStringList enabled = m_settings->enabledTrackerSources();
-    if (enabled.isEmpty()) return;
+    if (enabled.isEmpty())
+        return;
 
     auto accumulated = std::make_shared<QSet<QString>>();
     auto pendingCount = std::make_shared<int>(0);
 
-    for (const QString &key : enabled) {
-        if (urls.contains(key)) {
+    for (const QString &key : enabled)
+    {
+        if (urls.contains(key))
+        {
             (*pendingCount)++;
 
             QNetworkRequest req;
             req.setUrl(QUrl(urls[key]));
             QNetworkReply *reply = m_netManager->get(req);
 
-            connect(reply, &QNetworkReply::finished, this, [this, reply, accumulated, pendingCount]() {
+            connect(reply, &QNetworkReply::finished, this, [this, reply, accumulated, pendingCount]()
+                    {
                 if (reply->error() == QNetworkReply::NoError) {
                     QString data = QString::fromUtf8(reply->readAll());
                     QStringList lines = data.split('\n');
@@ -538,8 +642,7 @@ void DownloadManager::fetchTrackers()
                         m_settings->setBtTrackers(finalStr);
                         applyGlobalSettings();
                     }
-                }
-            });
+                } });
         }
     }
 }
@@ -552,13 +655,16 @@ void DownloadManager::loadBaiduPath(const QString &path)
 void DownloadManager::downloadBaiduFiles(const QList<int> &indexes)
 {
     QStringList fsIds;
-    for (int row : indexes) {
+    for (int row : indexes)
+    {
         QVariantMap data = m_baiduModel->get(row);
-        if (!data.isEmpty() && !data["isDir"].toBool()) {
+        if (!data.isEmpty() && !data["isDir"].toBool())
+        {
             fsIds << data["fs_id"].toString();
         }
     }
-    if (!fsIds.isEmpty()) {
+    if (!fsIds.isEmpty())
+    {
         m_baidu->downloadFiles(fsIds, m_settings->downloadPath());
     }
 }
@@ -566,17 +672,19 @@ void DownloadManager::downloadBaiduFiles(const QList<int> &indexes)
 void DownloadManager::deleteBaiduFiles(const QList<int> &indexes)
 {
     QStringList paths;
-    for (int row : indexes) {
+    for (int row : indexes)
+    {
         QVariantMap data = m_baiduModel->get(row);
-        if (!data.isEmpty()) {
+        if (!data.isEmpty())
+        {
             paths << data["path"].toString();
         }
     }
-    if (!paths.isEmpty()) {
+    if (!paths.isEmpty())
+    {
         m_baidu->deleteFiles(paths);
-        QTimer::singleShot(1000, this, [this](){
-            emit baiduFilesLoaded();
-        });
+        QTimer::singleShot(1000, this, [this]()
+                           { emit baiduFilesLoaded(); });
     }
 }
 
@@ -588,13 +696,16 @@ void DownloadManager::loadThunderPath(const QString &parentId)
 void DownloadManager::downloadThunderFiles(const QList<int> &indexes)
 {
     QStringList fileIds;
-    for (int row : indexes) {
+    for (int row : indexes)
+    {
         QVariantMap data = m_thunderModel->get(row);
-        if (!data.isEmpty() && !data["isDir"].toBool()) {
+        if (!data.isEmpty() && !data["isDir"].toBool())
+        {
             fileIds << data["id"].toString();
         }
     }
-    if (!fileIds.isEmpty()) {
+    if (!fileIds.isEmpty())
+    {
         m_thunder->downloadFiles(fileIds, m_settings->downloadPath());
     }
 }
@@ -602,17 +713,19 @@ void DownloadManager::downloadThunderFiles(const QList<int> &indexes)
 void DownloadManager::deleteThunderFiles(const QList<int> &indexes)
 {
     QStringList fileIds;
-    for (int row : indexes) {
+    for (int row : indexes)
+    {
         QVariantMap data = m_thunderModel->get(row);
-        if (!data.isEmpty()) {
+        if (!data.isEmpty())
+        {
             fileIds << data["id"].toString();
         }
     }
-    if (!fileIds.isEmpty()) {
+    if (!fileIds.isEmpty())
+    {
         m_thunder->deleteFiles(fileIds);
-        QTimer::singleShot(1000, this, [this](){
-             emit thunderFilesLoaded();
-        });
+        QTimer::singleShot(1000, this, [this]()
+                           { emit thunderFilesLoaded(); });
     }
 }
 
