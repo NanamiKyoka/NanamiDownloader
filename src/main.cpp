@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     Logger::instance()->init();
     qInstallMessageHandler(Logger::messageOutput);
 
-    qInfo() << "App Started. Version: 1.1.0";
+    qInfo() << "App Started. Version: 1.2.0";
     qInfo() << "App Directory:" << QCoreApplication::applicationDirPath();
     qInfo() << "OS:" << QSysInfo::prettyProductName() << QSysInfo::currentCpuArchitecture();
 
@@ -30,14 +30,26 @@ int main(int argc, char *argv[])
     app.setOrganizationDomain("nanami.app");
 
     SingleInstanceManager singleInstance("NanamiDownloader_Unique_Lock_Key");
-    if (!singleInstance.checkAndListen()) {
+    if (!singleInstance.checkAndListen())
+    {
         return 0;
     }
 
     QQuickStyle::setStyle("Basic");
 
     qmlRegisterType<DownloadManager>("Nanami.Core", 1, 0, "DownloadManager");
-    qmlRegisterType<ThemeController>("Nanami.UI", 1, 0, "ThemeController");
+    qmlRegisterSingletonType<ThemeController>("Nanami.UI", 1, 0, "ThemeController",
+                                              [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QObject *
+                                              {
+                                                  Q_UNUSED(engine)
+                                                  Q_UNUSED(scriptEngine)
+                                                  static ThemeController *instance = nullptr;
+                                                  if (!instance)
+                                                  {
+                                                      instance = new ThemeController();
+                                                  }
+                                                  return instance;
+                                              });
     qmlRegisterType<SettingsManager>("Nanami.Core", 1, 0, "SettingsManager");
     qmlRegisterType<ClipboardHelper>("Nanami.Core", 1, 0, "ClipboardHelper");
     qmlRegisterType<BaiduFileModel>("Nanami.Core", 1, 0, "BaiduFileModel");
@@ -52,10 +64,14 @@ int main(int argc, char *argv[])
     CursorPosProvider cursorPosProvider;
 
     QTranslator translator;
-    auto loadLanguage = [&](const QString &lang) {
-        if (translator.load(lang, ":/translations")) {
+    auto loadLanguage = [&](const QString &lang)
+    {
+        if (translator.load(lang, ":/translations"))
+        {
             app.installTranslator(&translator);
-        } else {
+        }
+        else
+        {
             app.removeTranslator(&translator);
         }
     };
@@ -66,10 +82,13 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
 
-    QObject::connect(&settingsManager, &SettingsManager::languageChanged, [&]() {
+    // 添加 QML 模块导入路径
+    engine.addImportPath("qrc:/");
+
+    QObject::connect(&settingsManager, &SettingsManager::languageChanged, [&]()
+                     {
         loadLanguage(settingsManager.language());
-        engine.retranslate();
-    });
+        engine.retranslate(); });
 
     engine.rootContext()->setContextProperty("Settings", &settingsManager);
     engine.rootContext()->setContextProperty("Downloader", &downloadManager);
@@ -79,22 +98,23 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("SingleInstance", &singleInstance);
     engine.rootContext()->setContextProperty("AppLogger", Logger::instance());
 
-    if (settingsManager.autoStart()) {
+    if (settingsManager.autoStart())
+    {
         autoStartManager.setAutoStart(true);
-    } else {
+    }
+    else
+    {
         autoStartManager.setAutoStart(false);
     }
 
-    QObject::connect(&app, &QGuiApplication::aboutToQuit, [&downloadManager](){
-        downloadManager.shutdown();
-    });
+    QObject::connect(&app, &QGuiApplication::aboutToQuit, [&downloadManager]()
+                     { downloadManager.shutdown(); });
 
     const QUrl url(QStringLiteral("qrc:/src/UI/Main.qml"));
-    QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
-                     &app, [url](QObject *obj, const QUrl &objUrl) {
+    QObject::connect(&engine, &QQmlApplicationEngine::objectCreated, &app, [url](QObject *obj, const QUrl &objUrl)
+                     {
         if (!obj && url == objUrl)
-            QCoreApplication::exit(-1);
-    }, Qt::QueuedConnection);
+            QCoreApplication::exit(-1); }, Qt::QueuedConnection);
 
     engine.load(url);
 

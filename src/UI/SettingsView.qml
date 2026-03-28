@@ -84,13 +84,34 @@ Item {
                         width: 180
                         height: 44
 
+                        property bool isHovered: mouseArea.containsMouse
+                        property bool isSelected: index === root.currentSettingTab
+
                         Rectangle {
                             width: parent.width
                             height: parent.height
                             anchors.centerIn: parent
-                            color: index === root.currentSettingTab ? (Theme.isDark ? "#333" : "#e6f2ff") : "transparent"
                             radius: 8
-                            Behavior on color { ColorAnimation { duration: 200 } }
+                            // 使用两层实现平滑过渡：基础层 + 选中层
+                            color: Theme.background
+
+                            // 选中状态背景
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: 8
+                                color: Theme.isDark ? "#333" : "#e6f2ff"
+                                opacity: isSelected ? 1 : 0
+                                Behavior on opacity { NumberAnimation { duration: 150 } }
+                            }
+
+                            // 悬停状态背景
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: 8
+                                color: Theme.hover
+                                opacity: isHovered && !isSelected ? 1 : 0
+                                Behavior on opacity { NumberAnimation { duration: 150 } }
+                            }
 
                             Rectangle {
                                 width: 4; height: 18
@@ -104,7 +125,9 @@ Item {
                         }
 
                         MouseArea {
+                            id: mouseArea
                             anchors.fill: parent
+                            hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.currentSettingTab = index
                         }

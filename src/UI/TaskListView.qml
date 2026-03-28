@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Nanami.Core 1.0
+import Nanami.UI 1.0
+import Nanami.UI.Components 1.0
 
 Item {
     id: root
@@ -57,24 +59,6 @@ Item {
         var m = Math.floor(seconds / 60);
         var s = Math.floor(seconds % 60);
         return m + "m " + s + "s";
-    }
-
-    component IconButton: Button {
-        property string iconName
-        property color iconColor: Theme.textSecondary
-
-        width: 32; height: 32
-        icon.source: iconName
-        icon.color: iconColor
-        icon.width: 22
-        icon.height: 22
-        display: AbstractButton.IconOnly
-
-        background: Rectangle {
-            color: parent.hovered ? (Theme.isDark ? "#444" : "#ddd") : "transparent"
-            radius: 4
-        }
-        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; enabled: false }
     }
 
     component StatusIcon: Button {
@@ -137,11 +121,32 @@ Item {
                         width: parent.width
                         height: 44
 
+                        property bool isHovered: mouseArea.containsMouse
+                        property bool isSelected: index === root.filterType
+
                         Rectangle {
                             anchors.fill: parent
-                            color: index === root.filterType ? (Theme.isDark ? "#333" : "#e6f2ff") : "transparent"
                             radius: 8
-                            Behavior on color { ColorAnimation { duration: 200 } }
+                            // 使用两层实现平滑过渡：基础层 + 选中层
+                            color: Theme.background
+
+                            // 选中状态背景
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: 8
+                                color: Theme.isDark ? "#333" : "#e6f2ff"
+                                opacity: isSelected ? 1 : 0
+                                Behavior on opacity { NumberAnimation { duration: 150 } }
+                            }
+
+                            // 悬停状态背景
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: 8
+                                color: Theme.hover
+                                opacity: isHovered && !isSelected ? 1 : 0
+                                Behavior on opacity { NumberAnimation { duration: 150 } }
+                            }
 
                             Rectangle {
                                 width: 4; height: 18
@@ -154,7 +159,9 @@ Item {
                         }
 
                         MouseArea {
+                            id: mouseArea
                             anchors.fill: parent
+                            hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.filterType = index
                         }
@@ -225,26 +232,56 @@ Item {
                     Item { Layout.fillWidth: true }
                     Row {
                         spacing: 10
-                        visible: filterType !== 3
-                        IconButton {
+                        // 全部任务页面：显示常规按钮
+                        visible: filterType === 0
+                        NIconButton {
                             iconName: "qrc:/src/Icons/play.svg"
+                            iconColor: Theme.textSecondary
                             onClicked: { Downloader.unpauseAll(); window.showToast(qsTr("已全部开始")) }
-                            ToolTip.visible: hovered; ToolTip.text: qsTr("全部开始")
+                            tooltip: qsTr("全部开始")
                         }
-                        IconButton {
+                        NIconButton {
                             iconName: "qrc:/src/Icons/pause.svg"
+                            iconColor: Theme.textSecondary
                             onClicked: { Downloader.pauseAll(); window.showToast(qsTr("已全部暂停")) }
-                            ToolTip.visible: hovered; ToolTip.text: qsTr("全部暂停")
+                            tooltip: qsTr("全部暂停")
                         }
-                        IconButton {
+                        NIconButton {
                             iconName: "qrc:/src/Icons/refresh.svg"
+                            iconColor: Theme.textSecondary
                             onClicked: { window.showToast(qsTr("列表已刷新")) }
-                            ToolTip.visible: hovered; ToolTip.text: qsTr("刷新")
+                            tooltip: qsTr("刷新")
                         }
-                        IconButton {
+                        NIconButton {
                             iconName: "qrc:/src/Icons/delete.svg"
-                            onClicked: { Downloader.purgeDownloadResult(); window.showToast(qsTr("已清空移除记录")) }
-                            ToolTip.visible: hovered; ToolTip.text: qsTr("删除所有")
+                            iconColor: Theme.textSecondary
+                            onClicked: {
+                                var count = Downloader.removeCompletedTasks()
+                                if (count > 0) {
+                                    window.showToast(qsTr("已清除 %1 个完成的任务").arg(count))
+                                } else {
+                                    window.showToast(qsTr("没有可清除的任务"))
+                                }
+                            }
+                            tooltip: qsTr("清除已完成")
+                        }
+                    }
+                    Row {
+                        spacing: 10
+                        // 已停止页面：显示清除已完成按钮
+                        visible: filterType === 3
+                        NIconButton {
+                            iconName: "qrc:/src/Icons/delete.svg"
+                            iconColor: Theme.textSecondary
+                            onClicked: {
+                                var count = Downloader.removeCompletedTasks()
+                                if (count > 0) {
+                                    window.showToast(qsTr("已清除 %1 个完成的任务").arg(count))
+                                } else {
+                                    window.showToast(qsTr("没有可清除的任务"))
+                                }
+                            }
+                            tooltip: qsTr("清除已完成")
                         }
                     }
                 }
@@ -301,7 +338,7 @@ Item {
                                 Row {
                                     spacing: 8
 
-                                    IconButton {
+                                    NIconButton {
                                         iconName: {
                                             if (model.status === "seeding") return "qrc:/src/Icons/pause.svg"
                                             if (model.status === "active") return "qrc:/src/Icons/pause.svg"
@@ -323,31 +360,32 @@ Item {
                                             }
                                         }
                                     }
-                                    IconButton {
+                                    NIconButton {
                                         iconName: "qrc:/src/Icons/folder.svg"
+                                        iconColor: Theme.textSecondary
                                         onClicked: {
                                             Downloader.openFolder(model.path)
                                             window.showToast(qsTr("已打开文件夹"))
                                         }
                                     }
-                                    IconButton {
+                                    NIconButton {
                                         iconName: "qrc:/src/Icons/link.svg"
+                                        iconColor: Theme.textSecondary
                                         onClicked: {
                                             Clipboard.copy(model.url)
                                             window.showToast(qsTr("链接已复制"))
                                         }
                                     }
-                                    IconButton {
+                                    NIconButton {
                                         iconName: "qrc:/src/Icons/delete.svg"
+                                        iconColor: Theme.textSecondary
                                         onClicked: {
-                                            deleteDialog.taskName = model.name
-                                            deleteDialog.gid = model.gid
-                                            deleteDialog.isPurge = true
-                                            deleteDialog.open()
+                                            deleteDialog.openDialog(model.name, model.gid, true)
                                         }
                                     }
-                                    IconButton {
+                                    NIconButton {
                                         iconName: "qrc:/src/Icons/info.svg"
+                                        iconColor: Theme.textSecondary
                                         onClicked: {
                                             window.showDetails(model.gid)
                                         }
@@ -362,15 +400,11 @@ Item {
                                 color: Theme.textSecondary
                             }
 
-                            Rectangle {
-                                Layout.fillWidth: true; height: 6
-                                color: Theme.isDark ? "#444" : "#eee"
-                                radius: 3
-                                Rectangle {
-                                    width: parent.width * model.progress; height: parent.height
-                                    color: Theme.accent; radius: 3
-                                    Behavior on width { NumberAnimation { duration: 300 } }
-                                }
+                            NProgress {
+                                Layout.fillWidth: true
+                                value: model.progress * 100
+                                showInfo: false
+                                size: "small"
                             }
 
                             RowLayout {

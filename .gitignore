@@ -5,6 +5,7 @@ debug/
 cmake-build-*/
 dist/
 *build-*
+.crkilo/
 
 .idea/
 .vscode/
@@ -27,12 +28,14 @@ dist/
 
 *.nsi
 *.bat
+*.zip
 
 aria2c.exe
 ffmpeg.exe
 N_m3u8DL-RE.exe
 aria2.session
 
+plans/
 logs/
 *.log
 *.tmp

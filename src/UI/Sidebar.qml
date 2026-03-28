@@ -32,17 +32,35 @@ Rectangle {
 
         background: Rectangle {
             id: bg
-            color: isActive ? "#007bff" : (isPendingBtn ? "#443300" : "transparent")
             radius: 8
-            border.color: isPendingBtn ? "#FFA500" : "transparent"
-            border.width: isPendingBtn ? 1 : 0
-            Behavior on color { ColorAnimation { duration: 150 } }
+            color: Theme.sidebar
 
+            // 激活状态层
             Rectangle {
                 anchors.fill: parent
-                color: "white"
-                opacity: parent.hovered && !parent.isActive && !parent.isPendingBtn ? 0.1 : 0
                 radius: 8
+                color: "#007bff"
+                opacity: isActive ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: 150 } }
+            }
+
+            // 待处理状态层
+            Rectangle {
+                anchors.fill: parent
+                radius: 8
+                color: "#443300"
+                border.color: "#FFA500"
+                border.width: 1
+                opacity: isPendingBtn ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: 150 } }
+            }
+
+            // 悬停状态层
+            Rectangle {
+                anchors.fill: parent
+                radius: 8
+                color: "white"
+                opacity: hovered && !isActive && !isPendingBtn ? 0.1 : 0
                 Behavior on opacity { NumberAnimation { duration: 150 } }
             }
         }

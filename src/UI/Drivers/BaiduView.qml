@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Nanami.Core 1.0
+import Nanami.UI 1.0
+import Nanami.UI.Components 1.0
 
 Item {
     id: root
@@ -53,13 +55,9 @@ Item {
 
         RowLayout {
             spacing: 10
-            Button {
+            NButton {
                 text: "←"
                 enabled: currentPath !== "/"
-                palette.button: Theme.isDark ? "#36393F" : "#F0F0F0"
-                palette.buttonText: Theme.textPrimary
-                palette.highlight: Theme.accent
-                palette.highlightedText: ThemeController.textInverted
                 onClicked: {
                     var parts = currentPath.split("/")
                     parts.pop()
@@ -77,32 +75,20 @@ Item {
                 elide: Text.ElideLeft
                 color: Theme.textPrimary
             }
-            Button {
+            NButton {
                 text: qsTr("刷新")
-                palette.button: Theme.isDark ? "#36393F" : "#F0F0F0"
-                palette.buttonText: Theme.textPrimary
-                palette.highlight: Theme.accent
-                palette.highlightedText: ThemeController.textInverted
                 onClicked: refresh()
             }
-            Button {
+            NButton {
                 text: qsTr("下载选中")
                 enabled: selectedIndexes.length > 0
-                palette.button: Theme.isDark ? "#36393F" : "#F0F0F0"
-                palette.buttonText: Theme.textPrimary
-                palette.highlight: Theme.accent
-                palette.highlightedText: ThemeController.textInverted
                 onClicked: {
                     Downloader.downloadBaiduFiles(selectedIndexes)
                 }
             }
-            Button {
+            NButton {
                 text: qsTr("删除选中")
                 enabled: selectedIndexes.length > 0
-                palette.button: Theme.isDark ? "#36393F" : "#F0F0F0"
-                palette.buttonText: Theme.textPrimary
-                palette.highlight: Theme.accent
-                palette.highlightedText: ThemeController.textInverted
                 onClicked: {
                     Downloader.deleteBaiduFiles(selectedIndexes)
                     refresh()
@@ -168,7 +154,7 @@ Item {
                         height: 20
                         Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
 
-                        CheckBox {
+                        NCheckbox {
                             id: checkBox
                             anchors.centerIn: parent
                             checked: selectedIndexes.indexOf(index) !== -1
@@ -177,27 +163,6 @@ Item {
                                 if (checked && idx === -1) selectedIndexes.push(index)
                                 else if (!checked && idx !== -1) selectedIndexes.splice(idx, 1)
                                 selectedIndexes = selectedIndexes.concat([])
-                            }
-                            contentItem: Text { text: ""; color: Theme.textPrimary }
-                            indicator: Rectangle {
-                                x: 0
-                                y: parent.height / 2 - height / 2
-                                implicitWidth: 18
-                                implicitHeight: 18
-                                radius: 3
-                                color: parent.checked ? Theme.accent : "transparent"
-                                border.color: parent.checked ? Theme.accent : Theme.textSecondary
-                                antialiasing: true
-                                Behavior on color { ColorAnimation { duration: 200 } }
-                                Behavior on border.color { ColorAnimation { duration: 200 } }
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "✓"
-                                    font.pixelSize: 14
-                                    font.bold: true
-                                    color: "white"
-                                    visible: checkBox.checked
-                                }
                             }
                         }
                     }

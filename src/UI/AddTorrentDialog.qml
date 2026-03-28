@@ -2,7 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Qt.labs.platform 1.1
-import QtQuick.Controls.Basic
+import Nanami.UI 1.0
+import Nanami.UI.Components 1.0
 
 Popup {
     id: root
@@ -204,14 +205,6 @@ Popup {
         }
     }
 
-    component InputBackground: Rectangle {
-        property bool isFocused: parent.activeFocus
-        color: Theme.isDark ? "#252525" : "#ffffff"
-        border.color: isFocused ? Theme.accent : Theme.divider
-        border.width: isFocused ? 2 : 1
-        radius: 6
-        Behavior on border.color { ColorAnimation { duration: 200 } }
-    }
 
     contentItem: ColumnLayout {
         spacing: 0
@@ -277,12 +270,10 @@ Popup {
                     color: Theme.textSecondary
                     font.pixelSize: 14
                 }
-                Button {
+                NButton {
                     Layout.alignment: Qt.AlignHCenter
                     text: qsTr("后台隐藏")
-                    palette.button: Theme.surface
-                    palette.buttonText: Theme.textPrimary
-                    palette.highlight: Theme.accent
+                    variant: "default"
                     onClicked: {
                         root.close()
                     }
@@ -298,13 +289,10 @@ Popup {
                 RowLayout {
                     Layout.fillWidth: true
                     Text { text: qsTr("名称:"); color: Theme.textSecondary; width: 60 }
-                    TextField {
+                    NInput {
                         text: root.torrentName
                         readOnly: true
                         Layout.fillWidth: true
-                        color: Theme.textPrimary
-                        background: InputBackground {}
-                        leftPadding: 10
                     }
                 }
 
@@ -314,29 +302,14 @@ Popup {
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 5
-                        TextField {
+                        NInput {
                             id: pathField
                             text: Settings.downloadPath
                             Layout.fillWidth: true
                             readOnly: true
-                            color: Theme.textPrimary
-                            background: InputBackground { color: Theme.isDark ? "#2b2b2b" : "#f0f0f0" }
-                            leftPadding: 10
                         }
-                        Button {
-                            width: 36
-                            height: 30
-                            icon.source: "qrc:/src/Icons/folder.svg"
-                            icon.color: Theme.textPrimary
-                            icon.width: 18
-                            icon.height: 18
-                            display: AbstractButton.IconOnly
-                            background: Rectangle {
-                                color: parent.hovered ? (Theme.isDark ? "#444" : "#ddd") : "transparent"
-                                radius: 4
-                                border.color: Theme.divider
-                                border.width: 1
-                            }
+                        NIconButton {
+                            iconName: "qrc:/src/Icons/folder.svg"
                             onClicked: folderPicker.open()
                         }
                     }
@@ -352,46 +325,18 @@ Popup {
                     }
                     Item { Layout.fillWidth: true }
 
-                    Button {
+                    NButton {
                         text: qsTr("全选")
-                        Layout.preferredHeight: 28
-                        Layout.preferredWidth: 60
-                        background: Rectangle {
-                            color: parent.hovered ? (Theme.isDark ? "#444" : "#ddd") : "transparent"
-                            border.color: Theme.divider
-                            border.width: 1
-                            radius: 4
-                        }
-                        contentItem: Text {
-                            text: parent.text
-                            color: Theme.textPrimary
-                            font.pixelSize: 12
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
+                        size: "small"
                         onClicked: {
                             if (rootTree) toggleNodeCheck(rootTree, true);
                             calculateStats();
                             refreshDisplay();
                         }
                     }
-                    Button {
+                    NButton {
                         text: qsTr("全不选")
-                        Layout.preferredHeight: 28
-                        Layout.preferredWidth: 60
-                        background: Rectangle {
-                            color: parent.hovered ? (Theme.isDark ? "#444" : "#ddd") : "transparent"
-                            border.color: Theme.divider
-                            border.width: 1
-                            radius: 4
-                        }
-                        contentItem: Text {
-                            text: parent.text
-                            color: Theme.textPrimary
-                            font.pixelSize: 12
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
+                        size: "small"
                         onClicked: {
                             if (rootTree) toggleNodeCheck(rootTree, false);
                             calculateStats();
@@ -446,23 +391,10 @@ Popup {
                                 }
                             }
 
-                            CheckBox {
+                            NCheckbox {
                                 checked: model.checked
                                 Layout.alignment: Qt.AlignVCenter
-                                implicitHeight: 18
-                                implicitWidth: 18
-                                indicator: Rectangle {
-                                    width: 16
-                                    height: 16
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    radius: 3
-                                    color: parent.checked ? Theme.accent : "transparent"
-                                    border.color: parent.checked ? Theme.accent : Theme.textSecondary
-                                    Text {
-                                        anchors.centerIn: parent; text: "✓"; font.pixelSize: 12; color: "white"; visible: parent.parent.checked
-                                    }
-                                }
-                                onClicked: {
+                                onToggled: {
                                     var node = findNodeByPath(model.nodePath);
                                     if (node) {
                                         toggleNodeCheck(node, checked);
@@ -510,45 +442,20 @@ Popup {
 
                 Item { Layout.fillWidth: true }
 
-                Button {
+                NButton {
                     text: qsTr("取消")
-                    flat: true
+                    variant: "default"
                     onClicked: {
                         root.rejected(root.gid)
                         root.close()
                         root.destroyDialog()
                     }
-                    contentItem: Text {
-                        text: qsTr("取消")
-                        color: Theme.textSecondary
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    background: Rectangle {
-                        color: parent.down ? (Theme.isDark ? "#333" : "#eee") : "transparent"
-                        border.color: Theme.divider
-                        radius: 4
-                    }
-                    Layout.preferredWidth: 80
-                    Layout.preferredHeight: 32
                 }
 
-                Button {
+                NButton {
                     text: qsTr("立即下载")
+                    variant: "primary"
                     enabled: !root.isLoading
-                    Layout.preferredWidth: 100
-                    Layout.preferredHeight: 32
-                    background: Rectangle {
-                        color: parent.enabled ? (parent.down ? Qt.darker(Theme.accent, 1.1) : Theme.accent) : (Theme.isDark ? "#444" : "#ccc")
-                        radius: 4
-                    }
-                    contentItem: Text {
-                        text: qsTr("立即下载")
-                        color: "white"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-
                     onClicked: {
                         var indexes = []
                         function collectIndexes(node) {

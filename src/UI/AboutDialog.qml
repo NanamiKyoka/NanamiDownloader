@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Nanami.UI 1.0
+import Nanami.UI.Components 1.0
 
 Popup {
     id: root
@@ -89,7 +90,7 @@ Popup {
                     }
 
                     Text {
-                        text: "Version 1.1.1"
+                        text: "Version 1.2.0"
                         font.pixelSize: 13
                         color: Theme.textSecondary
                         Layout.alignment: Qt.AlignHCenter
@@ -260,14 +261,11 @@ Popup {
                     }
                 }
 
-                Button {
+                NButton {
                     text: qsTr("返回")
+                    variant: "default"
                     Layout.alignment: Qt.AlignHCenter
                     onClicked: flipContainer.flipped = false
-                    palette.button: Theme.surface
-                    palette.buttonText: Theme.textPrimary
-                    palette.highlight: Theme.accent
-                    hoverEnabled: true
                 }
             }
         }

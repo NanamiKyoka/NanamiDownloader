@@ -1,11 +1,13 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Nanami.UI 1.0
+import Nanami.UI.Components 1.0
 
 Popup {
     id: root
     width: 500
-    height: root.isPurge ? 360 : 320
+    height: root.isPurge ? 400 : 360
     modal: true
     focus: true
     closePolicy: Popup.CloseOnEscape
@@ -16,29 +18,28 @@ Popup {
 
     signal confirm(string gid, bool deleteFile)
 
-    component CustomCheckBox: CheckBox {
-        id: ccb
-        indicator: Rectangle {
-            implicitWidth: 20
-            implicitHeight: 20
-            x: ccb.leftPadding
-            y: parent.height / 2 - height / 2
-            radius: 4
-            color: ccb.checked ? Theme.accent : "transparent"
-            border.color: ccb.checked ? Theme.accent : (Theme.isDark ? "#666" : "#bbb")
-            border.width: 1.5
-            Text {
-                anchors.centerIn: parent; text: "✓"; font.pixelSize: 14; font.bold: true; color: "white"; visible: ccb.checked
-            }
-            Behavior on color { ColorAnimation { duration: 100 } }
+    // 用于存储不再提示时的选择
+    property bool savedDeleteFileChoice: false
+
+    function openDialog(taskName, gid, isPurge) {
+        root.taskName = taskName
+        root.gid = gid
+        root.isPurge = isPurge
+
+        // 如果不需要确认，直接执行默认操作
+        if (!Settings.confirmDelete) {
+            root.confirm(gid, Settings.deleteWithFile)
+            return
         }
-        contentItem: Text {
-            text: ccb.text; font: ccb.font; color: Theme.textPrimary; verticalAlignment: Text.AlignVCenter; leftPadding: ccb.indicator.width + ccb.spacing
-        }
+
+        // 恢复上次的选择
+        deleteFileCb.checked = Settings.deleteWithFile
+        dontAskAgainCb.checked = false
+        root.open()
     }
 
     background: Rectangle {
-        color: Theme.isDark ? "#2b2b2b" : "#ffffff"
+        color: Theme.surface
         radius: 8
         border.color: Theme.divider
         border.width: 1
@@ -47,7 +48,7 @@ Popup {
     contentItem: ColumnLayout {
         anchors.fill: parent
         anchors.margins: 24
-        spacing: 20
+        spacing: 16
 
         RowLayout {
             spacing: 10
@@ -87,11 +88,11 @@ Popup {
             }
         }
 
-        CustomCheckBox {
+        NCheckbox {
             id: deleteFileCb
             text: qsTr("同时删除下载的文件")
             visible: root.isPurge
-            checked: false
+            checked: Settings.deleteWithFile
         }
 
         Text {
@@ -104,6 +105,12 @@ Popup {
             wrapMode: Text.WordWrap
         }
 
+        NCheckbox {
+            id: dontAskAgainCb
+            text: qsTr("不再提示，记住此次选择")
+            visible: root.isPurge
+        }
+
         Item { Layout.fillHeight: true }
 
         RowLayout {
@@ -111,41 +118,21 @@ Popup {
             Layout.alignment: Qt.AlignRight
             spacing: 12
 
-            Button {
+            NButton {
                 text: qsTr("取消")
-                flat: true
-                Layout.preferredWidth: 80
-                Layout.preferredHeight: 36
-                background: Rectangle {
-                    color: parent.hovered ? (Theme.isDark ? "#3e3e3e" : "#eeeeee") : "transparent"
-                    border.color: Theme.divider
-                    radius: 4
-                }
-                contentItem: Text {
-                    text: parent.text
-                    color: Theme.textPrimary
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
+                variant: "default"
                 onClicked: root.close()
             }
 
-            Button {
+            NButton {
                 text: qsTr("删除")
-                Layout.preferredWidth: 80
-                Layout.preferredHeight: 36
-                background: Rectangle {
-                    color: parent.down ? "#d9363e" : "#ff4d4f"
-                    radius: 4
-                }
-                contentItem: Text {
-                    text: parent.text
-                    color: "white"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    font.bold: true
-                }
+                variant: "primary"
                 onClicked: {
+                    // 如果勾选了不再提示，保存设置
+                    if (dontAskAgainCb.checked && root.isPurge) {
+                        Settings.setConfirmDelete(false)
+                        Settings.setDeleteWithFile(deleteFileCb.checked)
+                    }
                     root.confirm(root.gid, deleteFileCb.checked)
                     root.close()
                 }

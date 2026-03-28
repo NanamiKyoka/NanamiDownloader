@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Nanami.Core 1.0
+import Nanami.UI 1.0
+import Nanami.UI.Components 1.0
 
 Item {
     id: root
@@ -335,21 +337,14 @@ Item {
 
                     Item { Layout.fillWidth: true }
 
-                    Button {
+                    NButton {
                         text: qsTr("返回")
-                        flat: true
+                        variant: "text"
                         Layout.rightMargin: 10
                         onClicked: {
                             root.state = "hiddenRight"
                             closeTimer.start()
                         }
-                        contentItem: Text {
-                            text: parent.text
-                            color: Theme.textSecondary
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        background: Rectangle { color: "transparent" }
                     }
 
                     Timer {
@@ -572,25 +567,13 @@ Item {
                                                 }
                                             }
 
-                                            CheckBox {
+                                            NCheckbox {
                                                 checked: model.checked
                                                 enabled: model.type === "file"
                                                 Layout.alignment: Qt.AlignVCenter
                                                 implicitHeight: 18
                                                 implicitWidth: 18
                                                 onClicked: Downloader.setFilePriority(root.gid, model.index, checked)
-
-                                                indicator: Rectangle {
-                                                    width: 16
-                                                    height: 16
-                                                    anchors.verticalCenter: parent.verticalCenter
-                                                    radius: 3
-                                                    color: parent.checked ? Theme.accent : "transparent"
-                                                    border.color: parent.checked ? Theme.accent : Theme.textSecondary
-                                                    Text {
-                                                        anchors.centerIn: parent; text: "✓"; font.pixelSize: 12; color: "white"; visible: parent.parent.checked
-                                                    }
-                                                }
                                             }
 
                                             Text {
