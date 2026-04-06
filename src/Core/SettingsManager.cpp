@@ -1,4 +1,5 @@
 #include "SettingsManager.h"
+#include "../Utils/SecureStorage.h"
 #include <QRegularExpression>
 #include <QUuid>
 
@@ -155,8 +156,8 @@ void SettingsManager::setUserAgentIndex(int index) { m_settings.setValue("userAg
 int SettingsManager::rpcPort() const { return m_settings.value("rpcPort", 16888).toInt(); }
 void SettingsManager::setRpcPort(int port) { m_settings.setValue("rpcPort", port); emit rpcPortChanged(); }
 
-QString SettingsManager::rpcSecret() const { return m_settings.value("rpcSecret", "").toString(); }
-void SettingsManager::setRpcSecret(const QString &secret) { m_settings.setValue("rpcSecret", secret); emit rpcSecretChanged(); }
+QString SettingsManager::rpcSecret() const { return SecureStorage::retrieve("rpcSecret", ""); }
+void SettingsManager::setRpcSecret(const QString &secret) { SecureStorage::store("rpcSecret", secret); emit rpcSecretChanged(); }
 
 int SettingsManager::onDownloadComplete() const { return m_settings.value("onDownloadComplete", 0).toInt(); }
 void SettingsManager::setOnDownloadComplete(int action) { m_settings.setValue("onDownloadComplete", action); emit onDownloadCompleteChanged(); }
@@ -176,11 +177,11 @@ void SettingsManager::setEnableBaiduMount(bool enable) { m_settings.setValue("en
 bool SettingsManager::enableThunderMount() const { return m_settings.value("enableThunderMount", false).toBool(); }
 void SettingsManager::setEnableThunderMount(bool enable) { m_settings.setValue("enableThunderMount", enable); emit enableThunderMountChanged(); }
 
-QString SettingsManager::baiduRefreshToken() const { return m_settings.value("baiduRefreshToken", "").toString(); }
-void SettingsManager::setBaiduRefreshToken(const QString &token) { m_settings.setValue("baiduRefreshToken", token); emit baiduRefreshTokenChanged(); }
+QString SettingsManager::baiduRefreshToken() const { return SecureStorage::retrieve("baiduRefreshToken", ""); }
+void SettingsManager::setBaiduRefreshToken(const QString &token) { SecureStorage::store("baiduRefreshToken", token); emit baiduRefreshTokenChanged(); }
 
-QString SettingsManager::baiduAccessToken() const { return m_settings.value("baiduAccessToken", "").toString(); }
-void SettingsManager::setBaiduAccessToken(const QString &token) { m_settings.setValue("baiduAccessToken", token); emit baiduAccessTokenChanged(); }
+QString SettingsManager::baiduAccessToken() const { return SecureStorage::retrieve("baiduAccessToken", ""); }
+void SettingsManager::setBaiduAccessToken(const QString &token) { SecureStorage::store("baiduAccessToken", token); emit baiduAccessTokenChanged(); }
 
 QString SettingsManager::baiduUserAgent() const { return m_settings.value("baiduUserAgent", "pan.baidu.com").toString(); }
 void SettingsManager::setBaiduUserAgent(const QString &ua) { m_settings.setValue("baiduUserAgent", ua); emit baiduUserAgentChanged(); }
@@ -194,10 +195,10 @@ void SettingsManager::setThunderUsername(const QString &v) {
     }
 }
 
-QString SettingsManager::thunderPassword() const { return m_settings.value("thunderPassword", "").toString(); }
+QString SettingsManager::thunderPassword() const { return SecureStorage::retrieve("thunderPassword", ""); }
 void SettingsManager::setThunderPassword(const QString &v) {
     if (v != thunderPassword()) {
-        m_settings.setValue("thunderPassword", v);
+        SecureStorage::store("thunderPassword", v);
         setThunderAccessToken("");
         emit thunderPasswordChanged();
     }
@@ -222,11 +223,11 @@ QString SettingsManager::thunderDeviceId() const {
 }
 void SettingsManager::setThunderDeviceId(const QString &v) { m_settings.setValue("thunderDeviceId", v); emit thunderDeviceIdChanged(); }
 
-QString SettingsManager::thunderAccessToken() const { return m_settings.value("thunderAccessToken", "").toString(); }
-void SettingsManager::setThunderAccessToken(const QString &v) { m_settings.setValue("thunderAccessToken", v); emit thunderAccessTokenChanged(); }
+QString SettingsManager::thunderAccessToken() const { return SecureStorage::retrieve("thunderAccessToken", ""); }
+void SettingsManager::setThunderAccessToken(const QString &v) { SecureStorage::store("thunderAccessToken", v); emit thunderAccessTokenChanged(); }
 
-QString SettingsManager::thunderRefreshToken() const { return m_settings.value("thunderRefreshToken", "").toString(); }
-void SettingsManager::setThunderRefreshToken(const QString &v) { m_settings.setValue("thunderRefreshToken", v); emit thunderRefreshTokenChanged(); }
+QString SettingsManager::thunderRefreshToken() const { return SecureStorage::retrieve("thunderRefreshToken", ""); }
+void SettingsManager::setThunderRefreshToken(const QString &v) { SecureStorage::store("thunderRefreshToken", v); emit thunderRefreshTokenChanged(); }
 
 QString SettingsManager::matchProxy(const QString &url) {
     QString rules = proxyRules();

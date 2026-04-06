@@ -24,6 +24,8 @@ qt_add_executable(NanamiDownloader
         src/Utils/SingleInstanceManager.h
         src/Utils/Logger.cpp
         src/Utils/Logger.h
+        src/Utils/SecureStorage.cpp
+        src/Utils/SecureStorage.h
 
         src/Core/Aria2Service.cpp
         src/Core/Aria2Service.h
