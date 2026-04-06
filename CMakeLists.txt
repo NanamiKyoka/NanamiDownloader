@@ -45,6 +45,8 @@ qt_add_executable(NanamiDownloader
         src/Core/ClipboardHelper.h
         src/Core/DownloadManager.cpp
         src/Core/DownloadManager.h
+        src/Core/TaskRouter.cpp
+        src/Core/TaskRouter.h
         src/Core/AutoStartManager.cpp
         src/Core/AutoStartManager.h
 

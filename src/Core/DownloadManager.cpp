@@ -1,4 +1,5 @@
 #include "DownloadManager.h"
+#include "TaskRouter.h"
 #include "../Utils/ErrorHandler.h"
 #include <QDesktopServices>
 #include <QUrl>
@@ -163,7 +164,7 @@ void DownloadManager::continueTorrent(const QString &gid)
 
 void DownloadManager::setFilePriority(const QString &gid, int fileIndex, bool enabled)
 {
-    if (gid.startsWith("bt_"))
+    if (TaskRouter::isTorrentTask(gid))
     {
         m_torrent->setFilePriority(gid, fileIndex, enabled);
     }
@@ -171,22 +172,34 @@ void DownloadManager::setFilePriority(const QString &gid, int fileIndex, bool en
 
 void DownloadManager::pause(const QString &gid)
 {
-    if (gid.startsWith("m3u8_"))
+    switch (TaskRouter::identifyService(gid)) {
+    case ServiceType::M3u8:
         m_m3u8->stopTask(gid);
-    else if (gid.startsWith("bt_"))
+        break;
+    case ServiceType::Torrent:
         m_torrent->pause(gid);
-    else
+        break;
+    case ServiceType::Aria2:
+    default:
         m_aria2->pause(gid);
+        break;
+    }
 }
 
 void DownloadManager::unpause(const QString &gid)
 {
-    if (gid.startsWith("m3u8_"))
+    switch (TaskRouter::identifyService(gid)) {
+    case ServiceType::M3u8:
         m_m3u8->resumeTask(gid);
-    else if (gid.startsWith("bt_"))
+        break;
+    case ServiceType::Torrent:
         m_torrent->resume(gid);
-    else
+        break;
+    case ServiceType::Aria2:
+    default:
         m_aria2->unpause(gid);
+        break;
+    }
 }
 
 void DownloadManager::remove(const QString &gid)
@@ -197,7 +210,9 @@ void DownloadManager::remove(const QString &gid)
 void DownloadManager::handleDelete(const QString &gid, bool deleteFile)
 {
     qInfo() << "Deleting task:" << gid << "Delete files:" << deleteFile;
-    if (gid.startsWith("m3u8_"))
+    
+    switch (TaskRouter::identifyService(gid)) {
+    case ServiceType::M3u8:
     {
         bool isActive = false;
         auto activeTasks = m_m3u8->getActiveTasks();
@@ -213,12 +228,15 @@ void DownloadManager::handleDelete(const QString &gid, bool deleteFile)
         {
             m_m3u8->deleteTask(gid, deleteFile);
         }
+        break;
     }
-    else if (gid.startsWith("bt_"))
+    case ServiceType::Torrent:
     {
         m_torrent->remove(gid, deleteFile);
+        break;
     }
-    else
+    case ServiceType::Aria2:
+    default:
     {
         bool isActive = false;
         auto activeTasks = m_aria2->getActiveTasks();
@@ -258,6 +276,8 @@ void DownloadManager::handleDelete(const QString &gid, bool deleteFile)
             }
             m_aria2->removeDownloadResult(gid);
         }
+        break;
+    }
     }
 }
 
