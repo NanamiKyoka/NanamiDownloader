@@ -1,4 +1,5 @@
 #include "DownloadManager.h"
+#include "../Utils/ErrorHandler.h"
 #include <QDesktopServices>
 #include <QUrl>
 #include <QFileInfo>
@@ -20,8 +21,8 @@ DownloadManager::DownloadManager(SettingsManager *settings, QObject *parent)
     connect(m_torrent, &TorrentService::metadataLoaded, this, &DownloadManager::torrentMetadataLoaded);
     connect(m_torrent, &TorrentService::taskExists, this, &DownloadManager::taskExists);
 
-    connect(m_m3u8, &M3u8Service::errorOccurred, this, [this](QString msg)
-            { emit errorOccurred("M3U8 Error: " + msg); });
+    connect(m_m3u8, &M3u8Service::errorOccurred, this, [](QString msg)
+            { ErrorHandler::instance()->reportError(DownloadError::NetworkError, msg, "M3U8"); });
 
     connect(m_baidu, &BaiduService::fileListUpdated, this, [this](const std::vector<BaiduFile> &files)
             {
@@ -35,8 +36,8 @@ DownloadManager::DownloadManager(SettingsManager *settings, QObject *parent)
         }
         addUri(url, finalOptions);
         qInfo() << "Baidu download started:" << filename; });
-    connect(m_baidu, &BaiduService::errorOccurred, this, [this](QString msg)
-            { emit errorOccurred("Baidu Error: " + msg); });
+    connect(m_baidu, &BaiduService::errorOccurred, this, [](QString msg)
+            { ErrorHandler::instance()->reportError(DownloadError::AuthError, msg, "Baidu"); });
 
     connect(m_thunder, &ThunderService::fileListUpdated, this, [this](const std::vector<ThunderFile> &files)
             {
@@ -46,8 +47,8 @@ DownloadManager::DownloadManager(SettingsManager *settings, QObject *parent)
             {
         addUri(url, options);
         qInfo() << "Thunder download started:" << filename; });
-    connect(m_thunder, &ThunderService::errorOccurred, this, [this](QString msg)
-            { emit errorOccurred("Thunder Error: " + msg); });
+    connect(m_thunder, &ThunderService::errorOccurred, this, [](QString msg)
+            { ErrorHandler::instance()->reportError(DownloadError::AuthError, msg, "Thunder"); });
     connect(m_thunder, &ThunderService::authRequired, this, &DownloadManager::authRequired);
     connect(m_thunder, &ThunderService::verificationRequired, this, &DownloadManager::thunderVerificationRequired);
 
