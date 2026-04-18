@@ -72,7 +72,7 @@ qt_add_executable(NanamiDownloader
 # 添加 NanamiUI 组件模块
 qt_add_qml_module(NanamiDownloader
     URI Nanami.UI.Components
-    VERSION 1.2
+    VERSION 1.3
     RESOURCE_PREFIX "/"
     QML_FILES
         src/UI/Components/AnimationController.qml
@@ -136,6 +136,8 @@ endif()
 
 set_target_properties(NanamiDownloader PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR}
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${OUTPUT_DIR}
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/Debug
 )
 
 install(TARGETS NanamiDownloader RUNTIME DESTINATION bin)

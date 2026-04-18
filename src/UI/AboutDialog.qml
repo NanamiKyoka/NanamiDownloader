@@ -90,7 +90,7 @@ Popup {
                     }
 
                     Text {
-                        text: "Version 1.2.0"
+                        text: "Version 1.3.0"
                         font.pixelSize: 13
                         color: Theme.textSecondary
                         Layout.alignment: Qt.AlignHCenter
