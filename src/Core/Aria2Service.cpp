@@ -143,7 +143,10 @@ void Aria2Service::addUri(const QString &uri, const QJsonObject &options)
     pending.gid = "pending_" + QString::number(QDateTime::currentMSecsSinceEpoch());
     pending.name = processedUri;
     pending.status = "waiting";
-    m_waitingTasks.insert(m_waitingTasks.begin(), pending);
+    {
+        std::lock_guard<std::mutex> lock(m_tasksMutex);
+        m_waitingTasks.insert(m_waitingTasks.begin(), pending);
+    }
     emit tasksUpdated();
 
     sendJsonRpc("aria2.addUri", params);
@@ -174,7 +177,10 @@ void Aria2Service::addTorrent(const QString &filePath, const QJsonObject &option
     pending.gid = "pending_torrent";
     pending.name = QFileInfo(localPath).fileName();
     pending.status = "waiting";
-    m_waitingTasks.insert(m_waitingTasks.begin(), pending);
+    {
+        std::lock_guard<std::mutex> lock(m_tasksMutex);
+        m_waitingTasks.insert(m_waitingTasks.begin(), pending);
+    }
     emit tasksUpdated();
 
     sendJsonRpc("aria2.addTorrent", params);
@@ -305,9 +311,12 @@ void Aria2Service::onSocketTextMessageReceived(const QString &message)
                 tasks.push_back(parseTaskJson(item.toObject()));
             }
 
-            if (id == "REQ_ACTIVE") m_activeTasks = tasks;
-            else if (id == "REQ_WAITING") m_waitingTasks = tasks;
-            else if (id == "REQ_STOPPED") m_stoppedTasks = tasks;
+            {
+                std::lock_guard<std::mutex> lock(m_tasksMutex);
+                if (id == "REQ_ACTIVE") m_activeTasks = tasks;
+                else if (id == "REQ_WAITING") m_waitingTasks = tasks;
+                else if (id == "REQ_STOPPED") m_stoppedTasks = tasks;
+            }
 
             emit tasksUpdated();
         }
@@ -368,6 +377,20 @@ Task Aria2Service::parseTaskJson(const QJsonObject &json)
     return task;
 }
 
-std::vector<Task> Aria2Service::getActiveTasks() const { return m_activeTasks; }
-std::vector<Task> Aria2Service::getWaitingTasks() const { return m_waitingTasks; }
-std::vector<Task> Aria2Service::getStoppedTasks() const { return m_stoppedTasks; }
+std::vector<Task> Aria2Service::getActiveTasks() const
+{
+    std::lock_guard<std::mutex> lock(m_tasksMutex);
+    return m_activeTasks;
+}
+
+std::vector<Task> Aria2Service::getWaitingTasks() const
+{
+    std::lock_guard<std::mutex> lock(m_tasksMutex);
+    return m_waitingTasks;
+}
+
+std::vector<Task> Aria2Service::getStoppedTasks() const
+{
+    std::lock_guard<std::mutex> lock(m_tasksMutex);
+    return m_stoppedTasks;
+}

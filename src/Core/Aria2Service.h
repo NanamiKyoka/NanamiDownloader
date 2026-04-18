@@ -18,6 +18,7 @@
 #include <QTimer>
 #include <vector>
 #include <QQueue>
+#include <mutex>
 #include "TaskModel.h"
 #include "SettingsManager.h"
 
@@ -104,6 +105,7 @@ private:
     std::vector<Task> m_activeTasks;   ///< 活动任务缓存
     std::vector<Task> m_waitingTasks;  ///< 等待任务缓存
     std::vector<Task> m_stoppedTasks;  ///< 已停止任务缓存
+    mutable std::mutex m_tasksMutex;   ///< 任务缓存线程安全锁
 
     void connectToSocket();
     void sendJsonRpc(const QString &method, const QVariant &params = QVariant(), const QString &id = "");
