@@ -28,6 +28,8 @@ qt_add_executable(NanamiDownloader
         src/Utils/SecureStorage.h
         src/Utils/ErrorHandler.cpp
         src/Utils/ErrorHandler.h
+        src/Utils/FormatUtils.cpp
+        src/Utils/FormatUtils.h
 
         src/Core/Aria2Service.cpp
         src/Core/Aria2Service.h

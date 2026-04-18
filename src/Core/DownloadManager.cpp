@@ -1,6 +1,7 @@
 #include "DownloadManager.h"
 #include "TaskRouter.h"
 #include "../Utils/ErrorHandler.h"
+#include "../Utils/FormatUtils.h"
 #include <QDesktopServices>
 #include <QUrl>
 #include <QFileInfo>
@@ -427,7 +428,7 @@ void DownloadManager::refreshTasks()
         totalSpeed += t.downloadSpeed;
     }
 
-    QString speedStr = formatSpeed(totalSpeed);
+    QString speedStr = FormatUtils::formatSpeed(totalSpeed);
     if (speedStr != m_totalDownloadSpeedString)
     {
         m_totalDownloadSpeedString = speedStr;
@@ -547,28 +548,6 @@ void DownloadManager::refreshTasks()
         }
     }
     m_previousActiveGids = currentActiveGids;
-}
-
-QString DownloadManager::formatSpeed(qint64 bytes)
-{
-    if (bytes <= 0)
-        return "0 B/s";
-    if (bytes >= 1024 * 1024 * 1024)
-    {
-        return QString::number(static_cast<double>(bytes) / (1024 * 1024 * 1024), 'f', 2) + " GB/s";
-    }
-    else if (bytes >= 1024 * 1024)
-    {
-        return QString::number(static_cast<double>(bytes) / (1024 * 1024), 'f', 1) + " MB/s";
-    }
-    else if (bytes >= 1024)
-    {
-        return QString::number(static_cast<double>(bytes) / 1024, 'f', 0) + " KB/s";
-    }
-    else
-    {
-        return QString::number(bytes) + " B/s";
-    }
 }
 
 void DownloadManager::checkDownloadCompleteAction()

@@ -11,6 +11,7 @@
 
 #include <QAbstractListModel>
 #include <vector>
+#include "../Utils/FormatUtils.h"
 
 /**
  * @struct Task
@@ -61,7 +62,7 @@ struct Task {
      * @return 如 "1.5 MB/s"
      */
     QString downloadSpeedString() const {
-        return formatSpeed(downloadSpeed);
+        return FormatUtils::formatSpeed(downloadSpeed);
     }
 
     /**
@@ -69,23 +70,23 @@ struct Task {
      * @return 如 "500 KB/s"
      */
     QString uploadSpeedString() const {
-        return formatSpeed(uploadSpeed);
+        return FormatUtils::formatSpeed(uploadSpeed);
     }
-
+    
     /**
-     * @brief 格式化速度值为可读字符串
-     * @param bytes 字节/秒
-     * @return 格式化后的字符串，如 "1.5 MB/s"
+     * @brief 获取格式化的文件大小字符串
+     * @return 如 "1.5 GB"
      */
-    static QString formatSpeed(qint64 bytes) {
-        if (bytes <= 0) return "0 B/s";
-        if (bytes >= 1024 * 1024) {
-            return QString::number(static_cast<double>(bytes) / (1024 * 1024), 'f', 1) + " MB/s";
-        } else if (bytes >= 1024) {
-            return QString::number(static_cast<double>(bytes) / 1024, 'f', 0) + " KB/s";
-        } else {
-            return QString::number(bytes) + " B/s";
-        }
+    QString totalSizeString() const {
+        return FormatUtils::formatSize(totalLength);
+    }
+    
+    /**
+     * @brief 获取格式化的进度字符串
+     * @return 如 "75.5%"
+     */
+    QString progressString() const {
+        return FormatUtils::formatProgress(completedLength, totalLength);
     }
 };
 

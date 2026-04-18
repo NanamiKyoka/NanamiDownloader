@@ -161,7 +161,6 @@ private:
     void handleAlerts();
     Task createTaskFromStatus(const libtorrent::torrent_status& status, const QString& gidOverride = "");
     QString getGid(const libtorrent::torrent_handle& h) const;
-    QString formatSize(qint64 bytes);
 
     void loadResumeData();
     void writeResumeData(const libtorrent::add_torrent_params& atp);
