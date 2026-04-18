@@ -708,6 +708,7 @@ std::optional<Task> DownloadManager::findTaskByGid(const QString &gid) const
         if (auto task = searchInList(m_torrent->getActiveTasks())) return task;
         if (auto task = searchInList(m_torrent->getWaitingTasks())) return task;
         if (auto task = searchInList(m_torrent->getSeedingTasks())) return task;
+        if (auto task = searchInList(m_torrent->getStoppedTasks())) return task;
     } else {
         if (auto task = searchInList(m_aria2->getActiveTasks())) return task;
         if (auto task = searchInList(m_aria2->getWaitingTasks())) return task;
