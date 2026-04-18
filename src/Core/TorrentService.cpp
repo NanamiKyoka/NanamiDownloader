@@ -1,4 +1,5 @@
 #include "TorrentService.h"
+#include "../Utils/FormatUtils.h"
 #include <QDir>
 #include <QFileInfo>
 #include <QDebug>
@@ -309,10 +310,10 @@ void TorrentService::reconfigureTask(const QString &gid)
             fileMap["index"] = i;
             fileMap["path"] = QString::fromStdString(torrent_file->files().file_path(idx));
             fileMap["size"] = static_cast<qint64>(torrent_file->files().file_size(idx));
-            fileMap["sizeStr"] = formatSize(fileMap["size"].toLongLong());
+            fileMap["sizeStr"] = FormatUtils::formatSize(fileMap["size"].toLongLong());
             files.append(fileMap);
         }
-        QString totalSize = formatSize(torrent_file->total_size());
+        QString totalSize = FormatUtils::formatSize(torrent_file->total_size());
         emit metadataLoaded(gid, m_torrents[gid].name, totalSize, files);
     }
 }
@@ -438,6 +439,42 @@ void TorrentService::resumeAll()
     qInfo() << "All torrents resumed.";
 }
 
+int TorrentService::removeCompletedTasks()
+{
+    if (!m_session) return 0;
+    
+    int count = 0;
+    QStringList toRemove;
+    
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        for (auto it = m_torrents.begin(); it != m_torrents.end(); ++it) {
+            if (it.value().handle.is_valid()) {
+                auto status = it.value().handle.status();
+                bool isFinished = (status.state == lt::torrent_status::finished || 
+                                   status.state == lt::torrent_status::seeding);
+                bool hasError = static_cast<bool>(status.errc);
+                
+                if (isFinished || hasError) {
+                    toRemove.append(it.key());
+                    count++;
+                }
+            }
+        }
+    }
+    
+    for (const QString &gid : toRemove) {
+        remove(gid, false);
+    }
+    
+    if (count > 0) {
+        qInfo() << "Removed" << count << "completed/failed torrent tasks.";
+        emit tasksUpdated();
+    }
+    
+    return count;
+}
+
 void TorrentService::applySettings()
 {
     if (!m_session) return;
@@ -536,11 +573,11 @@ void TorrentService::handleAlerts()
                              fileMap["index"] = i;
                              fileMap["path"] = QString::fromStdString(torrent_file->files().file_path(idx));
                              fileMap["size"] = static_cast<qint64>(torrent_file->files().file_size(idx));
-                             fileMap["sizeStr"] = formatSize(fileMap["size"].toLongLong());
+                             fileMap["sizeStr"] = FormatUtils::formatSize(fileMap["size"].toLongLong());
                              files.append(fileMap);
                          }
 
-                         QString totalSize = formatSize(torrent_file->total_size());
+                         QString totalSize = FormatUtils::formatSize(torrent_file->total_size());
                          emit metadataLoaded(gid, m_torrents[gid].name, totalSize, files);
                      }
                  }
@@ -573,10 +610,10 @@ void TorrentService::handleAlerts()
                      fileMap["index"] = i;
                      fileMap["path"] = QString::fromStdString(torrent_file->files().file_path(idx));
                      fileMap["size"] = static_cast<qint64>(torrent_file->files().file_size(idx));
-                     fileMap["sizeStr"] = formatSize(fileMap["size"].toLongLong());
+                     fileMap["sizeStr"] = FormatUtils::formatSize(fileMap["size"].toLongLong());
                      files.append(fileMap);
                  }
-                 QString totalSize = formatSize(torrent_file->total_size());
+                 QString totalSize = FormatUtils::formatSize(torrent_file->total_size());
                  emit metadataLoaded(t.gid, t.name, totalSize, files);
              }
         }
@@ -587,18 +624,6 @@ QString TorrentService::getGid(const lt::torrent_handle& h) const {
     std::stringstream ss;
     ss << h.info_hashes().v1;
     return "bt_" + QString::fromStdString(ss.str());
-}
-
-QString TorrentService::formatSize(qint64 bytes) {
-    if (bytes == 0) return "0 B";
-    const char* sizes[] = { "B", "KB", "MB", "GB", "TB" };
-    int i = 0;
-    double dblByte = bytes;
-    while (dblByte >= 1024 && i < 4) {
-        dblByte /= 1024;
-        i++;
-    }
-    return QString::number(dblByte, 'f', 2) + " " + sizes[i];
 }
 
 Task TorrentService::createTaskFromStatus(const lt::torrent_status& status, const QString& gidOverride)
@@ -755,7 +780,7 @@ QJsonObject TorrentService::getTorrentDetails(const QString &gid) {
     lt::torrent_status st = h.status();
 
     QJsonObject general;
-    general["totalSize"] = formatSize(st.total_wanted);
+    general["totalSize"] = FormatUtils::formatSize(st.total_wanted);
     general["addedOn"] = QDateTime::fromSecsSinceEpoch(st.added_time).toString("yyyy/MM/dd HH:mm");
 
     QString completedOn = "N/A";
@@ -766,10 +791,10 @@ QJsonObject TorrentService::getTorrentDetails(const QString &gid) {
     ss << st.info_hashes.v1;
     general["hash"] = QString::fromStdString(ss.str());
     general["savePath"] = QString::fromStdString(st.save_path);
-    general["downloaded"] = formatSize(st.total_done);
-    general["uploaded"] = formatSize(st.all_time_upload);
-    general["downloadSpeed"] = formatSize(st.download_rate) + "/s";
-    general["uploadSpeed"] = formatSize(st.upload_rate) + "/s";
+    general["downloaded"] = FormatUtils::formatSize(st.total_done);
+    general["uploaded"] = FormatUtils::formatSize(st.all_time_upload);
+    general["downloadSpeed"] = FormatUtils::formatSize(st.download_rate) + "/s";
+    general["uploadSpeed"] = FormatUtils::formatSize(st.upload_rate) + "/s";
     general["connections"] = QString::number(st.num_connections);
     general["seeds"] = QString::number(st.num_seeds);
     general["peers"] = QString::number(st.num_peers);
@@ -779,7 +804,7 @@ QJsonObject TorrentService::getTorrentDetails(const QString &gid) {
     general["progress"] = progress;
 
     if (h.torrent_file()) {
-        general["pieces"] = QString::number(h.torrent_file()->num_pieces()) + " x " + formatSize(h.torrent_file()->piece_length());
+        general["pieces"] = QString::number(h.torrent_file()->num_pieces()) + " x " + FormatUtils::formatSize(h.torrent_file()->piece_length());
         general["completedPieces"] = QString::number(st.pieces.count());
     }
 
@@ -833,8 +858,8 @@ QJsonObject TorrentService::getTorrentDetails(const QString &gid) {
         pObj["client"] = QString::fromStdString(p.client);
         pObj["flags"] = getPeerFlags(p);
         pObj["progress"] = QString::number(p.progress_ppm / 10000.0, 'f', 1) + "%";
-        pObj["downSpeed"] = formatSize(p.down_speed) + "/s";
-        pObj["upSpeed"] = formatSize(p.up_speed) + "/s";
+        pObj["downSpeed"] = FormatUtils::formatSize(p.down_speed) + "/s";
+        pObj["upSpeed"] = FormatUtils::formatSize(p.up_speed) + "/s";
         peers.append(pObj);
     }
     details["peers"] = peers;
@@ -850,7 +875,7 @@ QJsonObject TorrentService::getTorrentDetails(const QString &gid) {
             QJsonObject fObj;
             fObj["index"] = i;
             fObj["name"] = QString::fromStdString(tf->files().file_path(lt::file_index_t(i)));
-            fObj["size"] = formatSize(tf->files().file_size(lt::file_index_t(i)));
+            fObj["size"] = FormatUtils::formatSize(tf->files().file_size(lt::file_index_t(i)));
             double prog = file_progress[i] > 0 ? (double)file_progress[i] / tf->files().file_size(lt::file_index_t(i)) * 100.0 : 0.0;
             fObj["progress"] = QString::number(prog, 'f', 1) + "%";
 

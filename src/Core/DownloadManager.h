@@ -16,6 +16,7 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QSet>
+#include <optional>
 #include "Aria2Service.h"
 #include "M3u8Service.h"
 #include "TorrentService.h"
@@ -227,5 +228,5 @@ private:
     QSet<QString> m_previousActiveGids;       ///< 上一次活动任务 GID 集合
     QString m_totalDownloadSpeedString = "0 B/s"; ///< 格式化的总下载速度
 
-    QString formatSpeed(qint64 bytes); ///< 格式化速度显示（如 "1.5 MB/s"）
+    std::optional<Task> findTaskByGid(const QString &gid) const;
 };

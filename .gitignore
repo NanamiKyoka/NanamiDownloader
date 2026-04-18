@@ -5,10 +5,8 @@ debug/
 cmake-build-*/
 dist/
 *build-*
-.crkilo/
 
-.idea/
-.vscode/
+.*
 *.user
 *.user.*
 *.qmake.stash

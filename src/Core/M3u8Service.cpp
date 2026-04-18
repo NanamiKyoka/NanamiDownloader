@@ -312,6 +312,31 @@ void M3u8Service::resumeAll()
     }
 }
 
+int M3u8Service::removeCompletedTasks()
+{
+    int count = 0;
+    QStringList toRemove;
+    
+    for (auto it = m_jobs.begin(); it != m_jobs.end(); ++it) {
+        QString status = it.value().task.status;
+        if (status == "complete" || status == "error" || status == "removed") {
+            toRemove.append(it.key());
+            count++;
+        }
+    }
+    
+    for (const QString &gid : toRemove) {
+        deleteTask(gid, false);
+    }
+    
+    if (count > 0) {
+        emit tasksUpdated();
+        saveTasksToDisk();
+    }
+    
+    return count;
+}
+
 std::vector<Task> M3u8Service::getActiveTasks() const
 {
     std::vector<Task> list;

@@ -98,6 +98,12 @@ public:
     void remove(const QString &gid, bool deleteFiles);
     void pauseAll();
     void resumeAll();
+    
+    /**
+     * @brief 移除所有已完成/错误的任务
+     * @return 移除的任务数量
+     */
+    int removeCompletedTasks();
 
     // ==================== 设置 ====================
     void applySettings();
@@ -155,7 +161,6 @@ private:
     void handleAlerts();
     Task createTaskFromStatus(const libtorrent::torrent_status& status, const QString& gidOverride = "");
     QString getGid(const libtorrent::torrent_handle& h) const;
-    QString formatSize(qint64 bytes);
 
     void loadResumeData();
     void writeResumeData(const libtorrent::add_torrent_params& atp);

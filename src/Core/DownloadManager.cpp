@@ -1,4 +1,7 @@
 #include "DownloadManager.h"
+#include "TaskRouter.h"
+#include "../Utils/ErrorHandler.h"
+#include "../Utils/FormatUtils.h"
 #include <QDesktopServices>
 #include <QUrl>
 #include <QFileInfo>
@@ -20,8 +23,8 @@ DownloadManager::DownloadManager(SettingsManager *settings, QObject *parent)
     connect(m_torrent, &TorrentService::metadataLoaded, this, &DownloadManager::torrentMetadataLoaded);
     connect(m_torrent, &TorrentService::taskExists, this, &DownloadManager::taskExists);
 
-    connect(m_m3u8, &M3u8Service::errorOccurred, this, [this](QString msg)
-            { emit errorOccurred("M3U8 Error: " + msg); });
+    connect(m_m3u8, &M3u8Service::errorOccurred, this, [](QString msg)
+            { ErrorHandler::instance()->reportError(DownloadError::NetworkError, msg, "M3U8"); });
 
     connect(m_baidu, &BaiduService::fileListUpdated, this, [this](const std::vector<BaiduFile> &files)
             {
@@ -35,8 +38,8 @@ DownloadManager::DownloadManager(SettingsManager *settings, QObject *parent)
         }
         addUri(url, finalOptions);
         qInfo() << "Baidu download started:" << filename; });
-    connect(m_baidu, &BaiduService::errorOccurred, this, [this](QString msg)
-            { emit errorOccurred("Baidu Error: " + msg); });
+    connect(m_baidu, &BaiduService::errorOccurred, this, [](QString msg)
+            { ErrorHandler::instance()->reportError(DownloadError::AuthError, msg, "Baidu"); });
 
     connect(m_thunder, &ThunderService::fileListUpdated, this, [this](const std::vector<ThunderFile> &files)
             {
@@ -46,8 +49,8 @@ DownloadManager::DownloadManager(SettingsManager *settings, QObject *parent)
             {
         addUri(url, options);
         qInfo() << "Thunder download started:" << filename; });
-    connect(m_thunder, &ThunderService::errorOccurred, this, [this](QString msg)
-            { emit errorOccurred("Thunder Error: " + msg); });
+    connect(m_thunder, &ThunderService::errorOccurred, this, [](QString msg)
+            { ErrorHandler::instance()->reportError(DownloadError::AuthError, msg, "Thunder"); });
     connect(m_thunder, &ThunderService::authRequired, this, &DownloadManager::authRequired);
     connect(m_thunder, &ThunderService::verificationRequired, this, &DownloadManager::thunderVerificationRequired);
 
@@ -162,7 +165,7 @@ void DownloadManager::continueTorrent(const QString &gid)
 
 void DownloadManager::setFilePriority(const QString &gid, int fileIndex, bool enabled)
 {
-    if (gid.startsWith("bt_"))
+    if (TaskRouter::isTorrentTask(gid))
     {
         m_torrent->setFilePriority(gid, fileIndex, enabled);
     }
@@ -170,22 +173,34 @@ void DownloadManager::setFilePriority(const QString &gid, int fileIndex, bool en
 
 void DownloadManager::pause(const QString &gid)
 {
-    if (gid.startsWith("m3u8_"))
+    switch (TaskRouter::identifyService(gid)) {
+    case ServiceType::M3u8:
         m_m3u8->stopTask(gid);
-    else if (gid.startsWith("bt_"))
+        break;
+    case ServiceType::Torrent:
         m_torrent->pause(gid);
-    else
+        break;
+    case ServiceType::Aria2:
+    default:
         m_aria2->pause(gid);
+        break;
+    }
 }
 
 void DownloadManager::unpause(const QString &gid)
 {
-    if (gid.startsWith("m3u8_"))
+    switch (TaskRouter::identifyService(gid)) {
+    case ServiceType::M3u8:
         m_m3u8->resumeTask(gid);
-    else if (gid.startsWith("bt_"))
+        break;
+    case ServiceType::Torrent:
         m_torrent->resume(gid);
-    else
+        break;
+    case ServiceType::Aria2:
+    default:
         m_aria2->unpause(gid);
+        break;
+    }
 }
 
 void DownloadManager::remove(const QString &gid)
@@ -196,13 +211,13 @@ void DownloadManager::remove(const QString &gid)
 void DownloadManager::handleDelete(const QString &gid, bool deleteFile)
 {
     qInfo() << "Deleting task:" << gid << "Delete files:" << deleteFile;
-    if (gid.startsWith("m3u8_"))
+    
+    switch (TaskRouter::identifyService(gid)) {
+    case ServiceType::M3u8:
     {
-        bool isActive = false;
         auto activeTasks = m_m3u8->getActiveTasks();
-        for (const auto &t : activeTasks)
-            if (t.gid == gid)
-                isActive = true;
+        bool isActive = std::any_of(activeTasks.begin(), activeTasks.end(),
+                                    [&gid](const Task &t) { return t.gid == gid; });
 
         if (isActive)
         {
@@ -212,25 +227,25 @@ void DownloadManager::handleDelete(const QString &gid, bool deleteFile)
         {
             m_m3u8->deleteTask(gid, deleteFile);
         }
+        break;
     }
-    else if (gid.startsWith("bt_"))
+    case ServiceType::Torrent:
     {
         m_torrent->remove(gid, deleteFile);
+        break;
     }
-    else
+    case ServiceType::Aria2:
+    default:
     {
-        bool isActive = false;
         auto activeTasks = m_aria2->getActiveTasks();
-        for (const auto &t : activeTasks)
-            if (t.gid == gid)
-                isActive = true;
+        bool isActive = std::any_of(activeTasks.begin(), activeTasks.end(),
+                                    [&gid](const Task &t) { return t.gid == gid; });
 
         if (!isActive)
         {
             auto waitingTasks = m_aria2->getWaitingTasks();
-            for (const auto &t : waitingTasks)
-                if (t.gid == gid)
-                    isActive = true;
+            isActive = std::any_of(waitingTasks.begin(), waitingTasks.end(),
+                                   [&gid](const Task &t) { return t.gid == gid; });
         }
 
         if (isActive)
@@ -240,14 +255,8 @@ void DownloadManager::handleDelete(const QString &gid, bool deleteFile)
         else
         {
             QString path;
-            auto stoppedTasks = m_aria2->getStoppedTasks();
-            for (const auto &t : stoppedTasks)
-            {
-                if (t.gid == gid)
-                {
-                    path = t.path;
-                    break;
-                }
+            if (auto task = findTaskByGid(gid)) {
+                path = task->path;
             }
 
             if (deleteFile && !path.isEmpty())
@@ -257,6 +266,8 @@ void DownloadManager::handleDelete(const QString &gid, bool deleteFile)
             }
             m_aria2->removeDownloadResult(gid);
         }
+        break;
+    }
     }
 }
 
@@ -282,6 +293,7 @@ void DownloadManager::purgeDownloadResult()
 int DownloadManager::removeCompletedTasks()
 {
     int count = 0;
+    
     std::vector<Task> stopped = m_aria2->getStoppedTasks();
     for (const auto &task : stopped)
     {
@@ -291,6 +303,10 @@ int DownloadManager::removeCompletedTasks()
             count++;
         }
     }
+    
+    count += m_m3u8->removeCompletedTasks();
+    count += m_torrent->removeCompletedTasks();
+    
     refreshTasks();
     return count;
 }
@@ -323,49 +339,10 @@ void DownloadManager::restartTask(const QString &gid)
     }
     else
     {
-        std::vector<Task> stopped = m_aria2->getStoppedTasks();
-        QString url;
-        bool found = false;
-        for (const auto &t : stopped)
-        {
-            if (t.gid == gid)
-            {
-                url = t.url;
-                found = true;
-                break;
-            }
-        }
-        if (!found)
-        {
-            std::vector<Task> active = m_aria2->getActiveTasks();
-            for (const auto &t : active)
-            {
-                if (t.gid == gid)
-                {
-                    url = t.url;
-                    found = true;
-                    break;
-                }
-            }
-        }
-        if (!found)
-        {
-            std::vector<Task> waiting = m_aria2->getWaitingTasks();
-            for (const auto &t : waiting)
-            {
-                if (t.gid == gid)
-                {
-                    url = t.url;
-                    found = true;
-                    break;
-                }
-            }
-        }
-
-        if (found && !url.isEmpty())
+        if (auto task = findTaskByGid(gid); task.has_value() && !task->url.isEmpty())
         {
             handleDelete(gid, false);
-            addUri(url);
+            addUri(task->url);
         }
     }
 }
@@ -401,7 +378,7 @@ void DownloadManager::refreshTasks()
         totalSpeed += t.downloadSpeed;
     }
 
-    QString speedStr = formatSpeed(totalSpeed);
+    QString speedStr = FormatUtils::formatSpeed(totalSpeed);
     if (speedStr != m_totalDownloadSpeedString)
     {
         m_totalDownloadSpeedString = speedStr;
@@ -521,28 +498,6 @@ void DownloadManager::refreshTasks()
         }
     }
     m_previousActiveGids = currentActiveGids;
-}
-
-QString DownloadManager::formatSpeed(qint64 bytes)
-{
-    if (bytes <= 0)
-        return "0 B/s";
-    if (bytes >= 1024 * 1024 * 1024)
-    {
-        return QString::number(static_cast<double>(bytes) / (1024 * 1024 * 1024), 'f', 2) + " GB/s";
-    }
-    else if (bytes >= 1024 * 1024)
-    {
-        return QString::number(static_cast<double>(bytes) / (1024 * 1024), 'f', 1) + " MB/s";
-    }
-    else if (bytes >= 1024)
-    {
-        return QString::number(static_cast<double>(bytes) / 1024, 'f', 0) + " KB/s";
-    }
-    else
-    {
-        return QString::number(bytes) + " B/s";
-    }
 }
 
 void DownloadManager::checkDownloadCompleteAction()
@@ -732,4 +687,32 @@ void DownloadManager::deleteThunderFiles(const QList<int> &indexes)
 void DownloadManager::loginThunder()
 {
     m_thunder->forceLogin();
+}
+
+std::optional<Task> DownloadManager::findTaskByGid(const QString &gid) const
+{
+    auto searchInList = [&gid](const std::vector<Task> &tasks) -> std::optional<Task> {
+        for (const auto &task : tasks) {
+            if (task.gid == gid) {
+                return task;
+            }
+        }
+        return std::nullopt;
+    };
+
+    if (gid.startsWith("m3u8_")) {
+        if (auto task = searchInList(m_m3u8->getActiveTasks())) return task;
+        if (auto task = searchInList(m_m3u8->getWaitingTasks())) return task;
+        if (auto task = searchInList(m_m3u8->getStoppedTasks())) return task;
+    } else if (gid.startsWith("bt_")) {
+        if (auto task = searchInList(m_torrent->getActiveTasks())) return task;
+        if (auto task = searchInList(m_torrent->getWaitingTasks())) return task;
+        if (auto task = searchInList(m_torrent->getSeedingTasks())) return task;
+        if (auto task = searchInList(m_torrent->getStoppedTasks())) return task;
+    } else {
+        if (auto task = searchInList(m_aria2->getActiveTasks())) return task;
+        if (auto task = searchInList(m_aria2->getWaitingTasks())) return task;
+        if (auto task = searchInList(m_aria2->getStoppedTasks())) return task;
+    }
+    return std::nullopt;
 }

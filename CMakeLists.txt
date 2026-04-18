@@ -24,6 +24,12 @@ qt_add_executable(NanamiDownloader
         src/Utils/SingleInstanceManager.h
         src/Utils/Logger.cpp
         src/Utils/Logger.h
+        src/Utils/SecureStorage.cpp
+        src/Utils/SecureStorage.h
+        src/Utils/ErrorHandler.cpp
+        src/Utils/ErrorHandler.h
+        src/Utils/FormatUtils.cpp
+        src/Utils/FormatUtils.h
 
         src/Core/Aria2Service.cpp
         src/Core/Aria2Service.h
@@ -41,6 +47,8 @@ qt_add_executable(NanamiDownloader
         src/Core/ClipboardHelper.h
         src/Core/DownloadManager.cpp
         src/Core/DownloadManager.h
+        src/Core/TaskRouter.cpp
+        src/Core/TaskRouter.h
         src/Core/AutoStartManager.cpp
         src/Core/AutoStartManager.h
 

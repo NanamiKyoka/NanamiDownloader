@@ -12,6 +12,7 @@
 #include "Utils/CursorPosProvider.h"
 #include "Utils/SingleInstanceManager.h"
 #include "Utils/Logger.h"
+#include "Utils/ErrorHandler.h"
 #include "Drivers/BaiduNetdisk/BaiduFileModel.h"
 #include "Drivers/Thunder/ThunderFileModel.h"
 
@@ -55,6 +56,13 @@ int main(int argc, char *argv[])
     qmlRegisterType<BaiduFileModel>("Nanami.Core", 1, 0, "BaiduFileModel");
     qmlRegisterType<ThunderFileModel>("Nanami.Core", 1, 0, "ThunderFileModel");
     qmlRegisterType<Logger>("Nanami.Utils", 1, 0, "Logger");
+    qmlRegisterSingletonType<ErrorHandler>("Nanami.Utils", 1, 0, "ErrorHandler",
+                                              [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QObject *
+                                              {
+                                                  Q_UNUSED(engine)
+                                                  Q_UNUSED(scriptEngine)
+                                                  return ErrorHandler::instance();
+                                              });
 
     SettingsManager settingsManager;
     DownloadManager downloadManager(&settingsManager);
