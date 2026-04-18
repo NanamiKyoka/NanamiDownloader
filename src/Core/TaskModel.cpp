@@ -1,5 +1,5 @@
 #include "TaskModel.h"
-#include <map>
+#include <unordered_map>
 #include <algorithm>
 
 TaskModel::TaskModel(QObject *parent)
@@ -76,17 +76,20 @@ void TaskModel::updateTasks(const std::vector<Task>& newTasks)
         return;
     }
 
-    std::map<QString, size_t> oldIndexMap;
+    std::unordered_map<QString, size_t> oldIndexMap;
+    oldIndexMap.reserve(m_tasks.size());
     for (size_t i = 0; i < m_tasks.size(); ++i) {
         oldIndexMap[m_tasks[i].gid] = i;
     }
 
-    std::map<QString, size_t> newIndexMap;
+    std::unordered_map<QString, size_t> newIndexMap;
+    newIndexMap.reserve(newTasks.size());
     for (size_t i = 0; i < newTasks.size(); ++i) {
         newIndexMap[newTasks[i].gid] = i;
     }
 
     std::vector<int> toRemove;
+    toRemove.reserve(m_tasks.size() / 4);
     for (size_t i = 0; i < m_tasks.size(); ++i) {
         if (newIndexMap.find(m_tasks[i].gid) == newIndexMap.end()) {
             toRemove.push_back(static_cast<int>(i));
@@ -94,6 +97,7 @@ void TaskModel::updateTasks(const std::vector<Task>& newTasks)
     }
 
     std::vector<std::pair<size_t, Task>> toInsert;
+    toInsert.reserve(newTasks.size() / 4);
     for (size_t i = 0; i < newTasks.size(); ++i) {
         if (oldIndexMap.find(newTasks[i].gid) == oldIndexMap.end()) {
             toInsert.emplace_back(i, newTasks[i]);
@@ -123,6 +127,7 @@ void TaskModel::updateTasks(const std::vector<Task>& newTasks)
     }
 
     oldIndexMap.clear();
+    oldIndexMap.reserve(m_tasks.size());
     for (size_t i = 0; i < m_tasks.size(); ++i) {
         oldIndexMap[m_tasks[i].gid] = i;
     }
