@@ -438,6 +438,42 @@ void TorrentService::resumeAll()
     qInfo() << "All torrents resumed.";
 }
 
+int TorrentService::removeCompletedTasks()
+{
+    if (!m_session) return 0;
+    
+    int count = 0;
+    QStringList toRemove;
+    
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        for (auto it = m_torrents.begin(); it != m_torrents.end(); ++it) {
+            if (it.value().handle.is_valid()) {
+                auto status = it.value().handle.status();
+                bool isFinished = (status.state == lt::torrent_status::finished || 
+                                   status.state == lt::torrent_status::seeding);
+                bool hasError = static_cast<bool>(status.errc);
+                
+                if (isFinished || hasError) {
+                    toRemove.append(it.key());
+                    count++;
+                }
+            }
+        }
+    }
+    
+    for (const QString &gid : toRemove) {
+        remove(gid, false);
+    }
+    
+    if (count > 0) {
+        qInfo() << "Removed" << count << "completed/failed torrent tasks.";
+        emit tasksUpdated();
+    }
+    
+    return count;
+}
+
 void TorrentService::applySettings()
 {
     if (!m_session) return;

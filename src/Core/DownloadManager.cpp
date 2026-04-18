@@ -303,6 +303,7 @@ void DownloadManager::purgeDownloadResult()
 int DownloadManager::removeCompletedTasks()
 {
     int count = 0;
+    
     std::vector<Task> stopped = m_aria2->getStoppedTasks();
     for (const auto &task : stopped)
     {
@@ -312,6 +313,10 @@ int DownloadManager::removeCompletedTasks()
             count++;
         }
     }
+    
+    count += m_m3u8->removeCompletedTasks();
+    count += m_torrent->removeCompletedTasks();
+    
     refreshTasks();
     return count;
 }

@@ -98,6 +98,12 @@ public:
     void remove(const QString &gid, bool deleteFiles);
     void pauseAll();
     void resumeAll();
+    
+    /**
+     * @brief 移除所有已完成/错误的任务
+     * @return 移除的任务数量
+     */
+    int removeCompletedTasks();
 
     // ==================== 设置 ====================
     void applySettings();

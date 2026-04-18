@@ -62,6 +62,12 @@ public:
     // ==================== 批量操作 ====================
     void pauseAll();
     void resumeAll();
+    
+    /**
+     * @brief 移除所有已完成/错误/已移除的任务
+     * @return 移除的任务数量
+     */
+    int removeCompletedTasks();
 
     // ==================== 任务查询 ====================
     std::vector<Task> getActiveTasks() const;
